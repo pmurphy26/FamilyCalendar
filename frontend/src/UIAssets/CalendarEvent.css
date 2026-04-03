@@ -1,0 +1,144 @@
+.calendar-day-event {
+  display: flex;
+  justify-content: space-between; /* left text left, right text right */
+  align-items: center;
+
+  background: white;
+  border: 2px solid black;
+  border-radius: 6px;
+
+  padding: 8px 12px;
+  cursor: pointer;
+
+  color: black;
+  font-weight: 600;
+  user-select: none;
+
+}
+
+.calendar-event {
+  display: flex;
+  /*border: 2px solid pink;*/
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.calendar-event-title {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    /*border: 2px solid blue;*/
+    
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.calendar-event-attributes {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    /*border: 2px solid yellow;*/
+    padding: 12px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.calendar-event-drive-situation {
+    display: flex;
+  flex-grow: 1;
+  min-height: 50vh; /* or 100px 
+  overflow-y: auto;*/
+  /*border: 2px solid rgb(14, 197, 217);*/
+  padding: 12px;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 6px;
+
+height: auto;
+  flex-grow: 1;
+
+}
+
+.image-text-combo {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    flex-direction:row;
+    /*border: 2px solid yellow;*/
+    padding: 4px;
+    justify-content: center; 
+    
+    box-sizing: border-box;
+}
+
+
+.driver-table {
+  display: flex;
+  /*border: 2px solid pink;*/
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.driver-row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.driver-cell {
+    flex: 1;
+    border: 1px solid #444;
+    padding: 2px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eee;
+    box-sizing: border-box;
+}
+
+.edit-selected-drive-situation {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  min-height: fit-content;
+  /*border: 2px solid purple;*/
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.edit-passengers {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  /*border: 2px solid yellow;*/
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.calendar-event-edit-drive-situation {
+  display: flex;
+  flex-grow: 1;
+  min-height: fit-content;
+  /*border: 2px solid rgb(14, 197, 217);*/
+  padding: 12px;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 6px;
+  height: auto;
+  flex-grow: 1;
+}

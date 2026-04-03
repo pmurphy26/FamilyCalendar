@@ -1,0 +1,152 @@
+.calendar-grid {
+  width: 100%;
+  background: white;
+  border: 2px solid #4a90e2;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  box-sizing: border-box;
+}
+
+.calendar-grid.week {
+  display: grid;
+  grid-template-rows: auto auto 1fr; /* first two rows auto height, last takes up remaining space */
+  gap: 8px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.calendar-weekdays,
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+}
+
+.calendar-weekdays div {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.day {
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.day:hover {
+  background: #e6f0ff;
+}
+
+.day.selected {
+  background: #4a90e2;
+  color: white;
+}
+
+.day.current {
+  background: #044488;
+  color: white;
+}
+
+.calendar-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  min-height: 200px;
+  gap: 8px;
+  width: 100%;
+}
+
+.calendar-bottom-cell {
+  background: #f8faff;
+  border-radius: 8px;
+  margin: 5px 0px 0px 0px;
+  width: 100%;
+  border: 2px solid green;
+  box-sizing: border-box; 
+}
+
+.calendar-weekday-column {
+  display: flex;
+  /*border: 2px solid pink;*/
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.calendar-weekday-column-event {
+  display: flex;
+  width: 100%;
+  height: 10%;
+  justify-content: space-between;
+  align-items: center;
+  /*border: 2px solid blue;*/
+  border-radius: 4px;
+  flex-shrink: 0;
+  gap: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.calendar-weekday-column-event-text {  
+  font-size: 0.5rem;/*clamp(0.25rem, 2vw, 20px);  auto-shrink text */
+  white-space: nowrap;              
+  overflow: hidden;                 
+  text-overflow: ellipsis;          
+  margin: 0px 4px;
+  color: white;
+}
+
+.calendar-page-header {
+  display: flex;
+  width: 100%;
+  height: 15%;
+  /*border: 2px solid pink;*/
+  box-sizing: border-box;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  /*padding: 4px 16px;*/
+}
+
+.create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+  border-radius: 10px;
+
+  border: none;
+  background: white;
+  color: #3c4043;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.create-btn:hover {
+  background: #f1f3f4;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.create-btn:active {
+  transform: scale(0.98);
+}
+
+.create-btn .plus {
+  font-size: 18px;
+  font-weight: 600;
+}
