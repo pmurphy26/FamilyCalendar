@@ -10,7 +10,9 @@ CREATE TABLE FamilyIndividuals (
     role FAMILY_INDIVIDUAL_ROLE DEFAULT 'CHILD',
     name VARCHAR(255) NOT NULL,
     canDrive BOOLEAN DEFAULT false,
-    canEdit BOOLEAN DEFAULT false
+    canEdit BOOLEAN DEFAULT false,
+    colorStr VARCHAR(255),
+    imageStr VARCHAR(255)
 );
 
 CREATE TABLE Calendar (
