@@ -149,10 +149,13 @@ export const updateEvent = async (req: Request, res: Response) => {
       const { newCalendarDayID, newDate } = event.calendarInfo;
 
       if (newCalendarDayID > -1) {
-        const successfulAlter = await updateEventInDB(event, newCalendarDayID);
+        const eventDayID = await updateEventInDB(event, newCalendarDayID);
 
-        if (successfulAlter) {
-          res.status(201).json({ message: "Event altered successfully" });
+        if (eventDayID != -1) {
+          res.status(201).json({
+            result: eventDayID,
+            message: "Event altered successfully for",
+          });
           return;
         } else {
           throw new Error(
@@ -167,10 +170,15 @@ export const updateEvent = async (req: Request, res: Response) => {
           return;
         } else {
           const newID = await getCalendarDayIDByDate(newDate, 0);
-          const successfulAlter = await updateEventInDB(event, newID);
+          const eventDayID = await updateEventInDB(event, newID);
           //console.log(successfulAlter);
-          if (successfulAlter) {
-            res.status(201).json({ message: "Event altered successfully" });
+          if (eventDayID != -1) {
+            res
+              .status(201)
+              .json({
+                result: eventDayID,
+                message: "Event altered successfully",
+              });
             return;
           } else {
             throw new Error(
@@ -180,9 +188,11 @@ export const updateEvent = async (req: Request, res: Response) => {
         }
       }
     } else {
-      const successfulAlter = await updateEventInDB(event);
-      if (successfulAlter) {
-        res.status(201).json({ message: "Event altered successfully" });
+      const eventDayID = await updateEventInDB(event);
+      if (eventDayID != -1) {
+        res
+          .status(201)
+          .json({ result: eventDayID, message: "Event altered successfully" });
         return;
       } else {
         throw new Error(

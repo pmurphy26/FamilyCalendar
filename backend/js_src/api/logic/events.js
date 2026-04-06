@@ -166,7 +166,7 @@ async function updateEventInDB(event, calendarDayID) {
         ...(calendarDayID != null ? [calendarDayID] : []),
     ]);
     if (result.rows.length == 0) {
-        return false;
+        return -1;
     }
-    return true;
+    return result.rows[0]?.calendardayid ?? -1;
 }

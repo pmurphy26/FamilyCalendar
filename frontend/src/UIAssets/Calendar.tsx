@@ -196,6 +196,18 @@ export function CalendarGrid({
 
       {/* All days in period */}
       <div className="calendar-days">
+        {label == "MONTH" &&
+          Array.from({ length: firstDay }, (_, i) => i).map((n) => (
+            <div
+              key={`empty-${n}`}
+              className={`day`}
+              style={{ cursor: "auto" }}
+            >
+              {
+                //`${n}`
+              }
+            </div>
+          ))}
         {days.map((d, i) => {
           /*console.log(
               `${d.date.month}/${d.date.day}/${d.date.year}`,

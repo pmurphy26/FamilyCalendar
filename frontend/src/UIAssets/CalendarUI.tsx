@@ -77,7 +77,6 @@ export function CalendarUI({
       return;
     }
 
-    //console.log("Error setting the new calendar day");
     setCurrentDay(newCurr);
   }
 
@@ -95,9 +94,11 @@ export function CalendarUI({
     if (
       calendarDaysInPeriod.length == 0 ||
       !(
-        periodStart.day == calendarDaysInPeriod[0].date.day &&
-        periodEnd.day ==
-          calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date.day
+        datesAreEqual(periodStart, calendarDaysInPeriod[0].date) &&
+        datesAreEqual(
+          periodEnd,
+          calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date,
+        )
       )
     ) {
       /*console.log(
@@ -190,6 +191,7 @@ export function CalendarUI({
   async function editCalendarEvent(e: CalendarEvent, d?: CalendarDate) {
     //console.log(d);
     //console.log(e.notes);
+    let eventDayID = -1;
     if (d) {
       const newDayID =
         compareDates(calendarDaysInPeriod[0].date, d) < 0 &&
@@ -201,17 +203,22 @@ export function CalendarUI({
               ?.id ?? -1)
           : -1;
 
-      console.log("New ID", newDayID);
-      //const res =
-      await editEvent(e, {
+      //console.log("New ID", newDayID);
+      const res = await editEvent(e, {
         newCalendarDayID: newDayID,
         newDate: d,
       });
       //console.log("Data:", res);
+
+      if (res.result) {
+        eventDayID = res.result;
+      }
     } else {
-      //const res =
-      await editEvent(e);
+      const res = await editEvent(e);
       //console.log("Data:", res);
+      if (res.result) {
+        eventDayID = res.result;
+      }
     }
 
     if (e.drivingSituation) {
@@ -222,6 +229,8 @@ export function CalendarUI({
         await createDrivingSituation(e);
       }
     }
+
+    return eventDayID;
   }
 
   /**
@@ -231,47 +240,65 @@ export function CalendarUI({
    * @param d
    */
   async function saveEditedEvent(c: CalendarEvent, d: CalendarDate) {
-    /*console.log(
-      `Saving new event: ${c.title}, ${c.time.hour}:${c.time.minute}, ${datesAreEqual(
-        d,
-        currentCalendarDay.date,
-      )}`,
-    );*/
-    //console.log(c.drivingSituation);
-
     //backend call to edit item
-    await editCalendarEvent(
+    const eventDateChanged = !datesAreEqual(d, currentCalendarDay.date);
+    const newEventDayID = await editCalendarEvent(
       c,
-      ...(!datesAreEqual(d, currentCalendarDay.date) ? [d] : []),
+      ...(eventDateChanged ? [d] : []),
     );
 
     //update calendar event
     setCurrentCalendarEvent(c);
 
     //TODO: Edit this to handle date changes
-    //update calendar day
-    const newEvents = [
-      ...currentCalendarDay.events.map((ccde: CalendarEvent) => {
-        if (ccde.id == c.id) {
-          return c;
-        }
-        return ccde;
-      }),
-    ];
-    //console.log(newEvents);
-    const newDay = {
-      ...currentCalendarDay,
-      events: newEvents,
-    };
-    setCurrentDay(newDay);
-    setCalendarDaysInPeriod([
-      ...calendarDaysInPeriod.map((cdip: CalendarDay) => {
-        if (datesEqual(cdip, currentCalendarDay)) {
-          return newDay;
-        }
-        return cdip;
-      }),
-    ]);
+    if (!eventDateChanged) {
+      //update calendar day
+      const newEvents = [
+        ...currentCalendarDay.events.map((ccde: CalendarEvent) => {
+          if (ccde.id == c.id) {
+            return c;
+          }
+          return ccde;
+        }),
+      ];
+      //console.log(newEvents);
+      const newDay = {
+        ...currentCalendarDay,
+        events: newEvents,
+      };
+      setCurrentDay(newDay);
+      setCalendarDaysInPeriod([
+        ...calendarDaysInPeriod.map((cdip: CalendarDay) => {
+          if (datesEqual(cdip, currentCalendarDay)) {
+            return newDay;
+          }
+          return cdip;
+        }),
+      ]);
+    } else {
+      const newDay = calendarDaysInPeriod.find(
+        (cdip) => cdip.id == newEventDayID,
+      ) ?? { id: newEventDayID, date: d, events: [] };
+      //console.log(newDay);
+
+      setCalendarDaysInPeriod(
+        calendarDaysInPeriod.map((cdip) => {
+          // console.log(cdip?.id ?? -1, newEventDayID);
+          if (datesAreEqual(cdip.date, d)) {
+            return { ...newDay, events: [...newDay.events, c] };
+          }
+          if (currentCalendarDay.id == cdip.id) {
+            return {
+              ...cdip,
+              events: [...cdip.events.filter((cde) => cde.id != c.id)],
+            };
+          }
+          return cdip;
+        }),
+      );
+
+      setCurrentDay({ ...newDay, events: [...newDay.events, c] });
+    }
 
     setRightSideDisplayType("EVENT");
   }

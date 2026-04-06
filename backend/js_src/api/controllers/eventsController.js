@@ -129,9 +129,12 @@ const updateEvent = async (req, res) => {
         if (event.calendarInfo) {
             const { newCalendarDayID, newDate } = event.calendarInfo;
             if (newCalendarDayID > -1) {
-                const successfulAlter = await (0, events_1.updateEventInDB)(event, newCalendarDayID);
-                if (successfulAlter) {
-                    res.status(201).json({ message: "Event altered successfully" });
+                const eventDayID = await (0, events_1.updateEventInDB)(event, newCalendarDayID);
+                if (eventDayID != -1) {
+                    res.status(201).json({
+                        result: eventDayID,
+                        message: "Event altered successfully for",
+                    });
                     return;
                 }
                 else {
@@ -147,10 +150,15 @@ const updateEvent = async (req, res) => {
                 }
                 else {
                     const newID = await (0, days_1.getCalendarDayIDByDate)(newDate, 0);
-                    const successfulAlter = await (0, events_1.updateEventInDB)(event, newID);
+                    const eventDayID = await (0, events_1.updateEventInDB)(event, newID);
                     //console.log(successfulAlter);
-                    if (successfulAlter) {
-                        res.status(201).json({ message: "Event altered successfully" });
+                    if (eventDayID != -1) {
+                        res
+                            .status(201)
+                            .json({
+                            result: eventDayID,
+                            message: "Event altered successfully",
+                        });
                         return;
                     }
                     else {
@@ -160,9 +168,11 @@ const updateEvent = async (req, res) => {
             }
         }
         else {
-            const successfulAlter = await (0, events_1.updateEventInDB)(event);
-            if (successfulAlter) {
-                res.status(201).json({ message: "Event altered successfully" });
+            const eventDayID = await (0, events_1.updateEventInDB)(event);
+            if (eventDayID != -1) {
+                res
+                    .status(201)
+                    .json({ result: eventDayID, message: "Event altered successfully" });
                 return;
             }
             else {

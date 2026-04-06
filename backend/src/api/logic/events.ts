@@ -187,7 +187,7 @@ async function deleteCommentByID(id: number): Promise<boolean> {
 export async function updateEventInDB(
   event: CalendarEvent,
   calendarDayID?: number,
-): Promise<Boolean> {
+): Promise<Number> {
   const result = await controller.query(
     `UPDATE calendarevent
     SET
@@ -222,8 +222,8 @@ export async function updateEventInDB(
   );
 
   if (result.rows.length == 0) {
-    return false;
+    return -1;
   }
 
-  return true;
+  return result.rows[0]?.calendardayid ?? -1;
 }
