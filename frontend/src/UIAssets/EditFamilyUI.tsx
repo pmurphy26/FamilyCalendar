@@ -3,9 +3,10 @@ import type {
   Family,
   FamilyIndividual,
   Vehicle,
+  AuthState,
 } from "@shared/types";
 import "./EditFamilyUI.css";
-import { BooleanForm, NumberForm, TextForm } from "../helpers.ts/forms";
+import { BooleanForm, NumberForm, TextForm } from "../helpers/forms";
 import { useState } from "react";
 import {
   createFamilyVehicle,
@@ -13,24 +14,30 @@ import {
   deleteFamilyVehicleWithID,
   updateIndividual,
   updateVehicle,
-} from "../helpers.ts/apiCalls";
+} from "../helpers/apiCalls";
+import "./logoutBar.css";
 
 export function EditFamilyUI({
   userFamily,
   onUpdate,
   onDelete,
+  rh,
+  logout,
 }: {
   userFamily: Family;
   onUpdate: (nf: Family) => void; //only updates the ui
   onDelete: (fi: FamilyIndividual) => void;
+  rh: AuthState;
+  logout: () => void;
 }) {
   return (
     <div className="edit-family-container">
+      <LogoutBar username={rh.user?.username ?? "Unknown"} logout={logout} />
       <EditFamilyMembersUI
         familyMembers={userFamily.members}
         onUpdate={async (cmb: FamilyIndividual) => {
           try {
-            const umb = await updateIndividual(cmb);
+            const umb = await updateIndividual(cmb, rh?.token ?? "");
 
             onUpdate({
               ...userFamily,
@@ -53,6 +60,7 @@ export function EditFamilyUI({
             const res: FamilyIndividual = await createMemberWithFamilyID(
               userFamily.id,
               newIndividual,
+              rh?.token ?? "",
             );
             //console.log("Res:", res);
             onUpdate({
@@ -67,7 +75,7 @@ export function EditFamilyUI({
       <EditFamilyVehiclesUI
         familyVehicles={userFamily?.vehicles ?? []}
         onUpdate={async (cv: Vehicle) => {
-          const su = await updateVehicle(cv);
+          const su = await updateVehicle(cv, rh?.token ?? "");
           onUpdate({
             ...userFamily,
             vehicles: (userFamily?.vehicles ?? []).map((fv) => {
@@ -80,7 +88,7 @@ export function EditFamilyUI({
         }}
         onDelete={function (fv: Vehicle): void {
           //const sd =
-          deleteFamilyVehicleWithID(fv.id);
+          deleteFamilyVehicleWithID(fv.id, rh?.token ?? "");
           //console.log(sd);
           onUpdate({
             ...userFamily,
@@ -90,13 +98,36 @@ export function EditFamilyUI({
           });
         }}
         onCreate={async (fv: Vehicle) => {
-          const nv = await createFamilyVehicle(userFamily.id, fv);
+          const nv = await createFamilyVehicle(
+            userFamily.id,
+            fv,
+            rh?.token ?? "",
+          );
           onUpdate({
             ...userFamily,
             vehicles: [...(userFamily?.vehicles ?? []), nv],
           });
         }}
       />
+    </div>
+  );
+}
+
+export function LogoutBar({
+  username,
+  logout,
+}: {
+  username: string;
+  logout: () => void;
+}) {
+  return (
+    <div className="logout-bar">
+      <div className="logout-user">
+        Logged in as <b>{username}</b>
+      </div>
+      <button className="logout-button" onClick={logout}>
+        Logout
+      </button>
     </div>
   );
 }

@@ -1,60 +1,95 @@
-CREATE TABLE Family (
-    id SERIAL PRIMARY KEY
+CREATE TABLE family (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(16) UNIQUE NOT NULL
 );
 
 CREATE TYPE FAMILY_INDIVIDUAL_ROLE AS ENUM ('MOM', 'DAD', 'CHILD', 'PARENT', 'GRANDPARENT', 'OTHER');
 
-CREATE TABLE FamilyIndividuals (
+CREATE TABLE family_individuals (
     id SERIAL PRIMARY KEY,
-    familyID INTEGER REFERENCES Family(id) NOT NULL,
-    role FAMILY_INDIVIDUAL_ROLE DEFAULT 'CHILD',
-    name VARCHAR(255) NOT NULL,
-    canDrive BOOLEAN DEFAULT false,
-    canEdit BOOLEAN DEFAULT false,
-    colorStr VARCHAR(255),
-    imageStr VARCHAR(255)
+    family_id INTEGER REFERENCES family(id) NOT NULL,
+    individual_role FAMILY_INDIVIDUAL_ROLE DEFAULT 'CHILD',
+    individual_name VARCHAR(255) NOT NULL,
+    can_drive BOOLEAN DEFAULT false,
+    can_edit BOOLEAN DEFAULT false,
+    color_str VARCHAR(255),
+    image_str VARCHAR(255)
 );
 
-CREATE TABLE Calendar (
+CREATE TABLE calendar (
     id SERIAL PRIMARY KEY,
-    familyID INTEGER REFERENCES Family(id) NOT NULL,
-    name VARCHAR(255) NOT NULL
+    family_id INTEGER REFERENCES family(id) NOT NULL,
+    calendar_name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE CalendarDay (
+CREATE TABLE calendar_day (
     id SERIAL PRIMARY KEY,
-    calendarID INTEGER REFERENCES Calendar(id) NOT NULL,
-    dayDay INTEGER NOT NULL,
-    dayMonth INTEGER NOT NULL, 
-    dayYear INTEGER NOT NULL
+    calendar_id INTEGER REFERENCES calendar(id) NOT NULL,
+    day_day INTEGER NOT NULL,
+    day_month INTEGER NOT NULL, 
+    day_year INTEGER NOT NULL
 );
 
-CREATE TABLE CalendarEvent (
+CREATE TABLE calendar_event (
     id SERIAL PRIMARY KEY,
-    calendarDayID INTEGER REFERENCES CalendarDay(id) NOT NULL,
-    eventTitle VARCHAR(255) NOT NULL,
-    eventHour INTEGER NOT NULL,
-    eventMinute INTEGER NOT NULL, 
-    eventIsAM BOOLEAN DEFAULT false NOT NULL,
-    eventLocation VARCHAR(255) NOT NULL,
-    eventNotes VARCHAR(1023),
-    createdByID INTEGER REFERENCES FamilyIndividuals(id) NOT NULL,
-    forID INTEGER REFERENCES FamilyIndividuals(id)
+
+    calendar_day_id INTEGER REFERENCES calendar_day(id) NOT NULL,
+
+    event_title VARCHAR(255) NOT NULL,
+
+    event_start_hour INTEGER NOT NULL,
+    event_start_minute INTEGER NOT NULL,
+    event_start_is_am BOOLEAN DEFAULT false NOT NULL,
+
+    event_end_hour INTEGER NOT NULL,
+    event_end_minute INTEGER NOT NULL,
+    event_end_is_am BOOLEAN DEFAULT false NOT NULL,
+
+    event_location VARCHAR(255) NOT NULL,
+    event_notes VARCHAR(1023),
+
+    created_by_id INTEGER REFERENCES family_individuals(id) NOT NULL,
+    for_id INTEGER REFERENCES family_individuals(id)
 );
 
-CREATE TABLE Vehicle (
+CREATE TABLE vehicle (
     id SERIAL PRIMARY KEY,
-    vehicleName VARCHAR(255) NOT NULL,
-    numPeopleCanFit INTEGER NOT NULL,
-    familyID INTEGER REFERENCES Family(id) NOT NULL
+    vehicle_name VARCHAR(255) NOT NULL,
+    num_people_can_fit INTEGER NOT NULL,
+    family_id INTEGER REFERENCES family(id) NOT NULL
 );
 
-CREATE TABLE TransportationForEvent (
+CREATE TABLE transportation_for_event (
     id SERIAL PRIMARY KEY,
-    vehicleID INTEGER REFERENCES Vehicle(id),
-    eventID INTEGER REFERENCES calendarevent(id) NOT NULL,
-    leaveAtHour INTEGER,
-    leaveAtMinute INTEGER, 
-    leaveAtIsAM BOOLEAN,
-    driverID INTEGER REFERENCES FamilyIndividuals(id)
+    vehicle_id INTEGER REFERENCES vehicle(id),
+    event_id INTEGER REFERENCES calendar_event(id) NOT NULL,
+    leave_at_hour INTEGER,
+    leave_at_minute INTEGER, 
+    leave_at_is_am BOOLEAN,
+    is_arrival BOOLEAN NOT NULL DEFAULT FALSE,
+    driver_id INTEGER REFERENCES family_individuals(id)
+);
+
+CREATE TABLE transportation_passengers (
+    transportation_id INTEGER NOT NULL,
+    passenger_id INTEGER NOT NULL,
+
+    FOREIGN KEY (transportation_id)
+        REFERENCES transportation_for_event(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (passenger_id)
+        REFERENCES family_individuals(id)
+        ON DELETE CASCADE,
+
+    PRIMARY KEY (transportation_id, passenger_id)
+);
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    family_individual_id INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (family_individual_id) REFERENCES family_individuals(id)
 );

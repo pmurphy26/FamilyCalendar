@@ -14,6 +14,13 @@ export const getFamily = async (req: Request, res: Response) => {
     }
 
     const result = await getFamilyForIndividualWithID(id);
+
+    if (!result) {
+      return res.status(400).json({
+        error: `unable to get family for individual with id ${id}`,
+      });
+    }
+
     res.json(result);
   } catch (err) {
     console.error("DB ERROR:", err);

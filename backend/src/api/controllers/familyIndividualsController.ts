@@ -38,6 +38,11 @@ export const createFamilyIndividual = async (req: Request, res: Response) => {
       id,
       individual as FamilyIndividual,
     );
+
+    if (!result) {
+      return res.status(409).json({ error: "error inserting into databse" });
+    }
+
     res.json(result);
   } catch (err) {
     console.error("DB ERROR:", err);

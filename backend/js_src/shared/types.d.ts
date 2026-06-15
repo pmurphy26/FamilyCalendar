@@ -10,12 +10,16 @@ export type CalendarDay = {
 export type CalendarEvent = {
     id: number;
     location: string;
-    time: CalendarTime;
+    startTime: CalendarTime;
+    endTime: CalendarTime;
     title: string;
     notes: string;
     createdBy: FamilyIndividual;
     for?: FamilyIndividual;
-    drivingSituation?: TransportationForEvent;
+    drivingSituation?: {
+        arrival?: TransportationForEvent;
+        departure?: TransportationForEvent;
+    };
 };
 export type Family = {
     id: number;
@@ -54,3 +58,15 @@ export type CalendarTime = {
     isAM: boolean;
 };
 export type UIState = "CALENDAR" | "EDIT";
+export type AuthUser = {
+    id: number;
+    username: string;
+    familyIndividualID: number | null;
+};
+export type AuthState = {
+    user: AuthUser | null;
+    token: string | null;
+};
+export declare function loadAuthState(): AuthState;
+export declare function saveAuthState(state: AuthState): void;
+export declare function clearAuthState(): void;

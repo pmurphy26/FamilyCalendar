@@ -1,0 +1,64 @@
+/* Layout container */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 1rem; /* gap-4 */
+}
+
+/* Title */
+.login-title {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: bold;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+/* Mode switch buttons container */
+.mode-buttons {
+  display: flex;
+  gap: 0.5rem; /* gap-2 */
+}
+
+/* Base button style */
+.mode-button {
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  border: 1px solid #000;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* Active mode button */
+.mode-button-active {
+  background-color: #3b82f6; /* blue-500 */
+  color: white;
+}
+
+/* Inputs */
+.login-input {
+  border: 1px solid #000;
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  width: 16rem; /* w-64 */
+}
+
+/* Submit button */
+.submit-button-login {
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  background-color: #16a34a; /* green-600 */
+  color: white;
+  cursor: pointer;
+  opacity: 1;
+  width: 17rem;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+}
+
+/* Error text */
+.error-text {
+  color: #ef4444; /* red-500 */
+  font-size: 0.875rem; /* text-sm */
+}

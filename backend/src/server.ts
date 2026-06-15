@@ -8,6 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+import authRoutes from "./api/routes/authRoutes";
+app.use("/api", authRoutes);
+
+import { requireAuth } from "./api/middleware/authMiddleware";
 import eventRoutes from "./api/routes/eventsRoutes";
 import dayRoutes from "./api/routes/dayRoutes";
 import calendarRoutes from "./api/routes/calendarRoutes";
@@ -15,13 +19,13 @@ import transportationRoutes from "./api/routes/transportationRoutes";
 import familyRoutes from "./api/routes/familyRoutes";
 import familyIndividualRoutes from "./api/routes/familyIndividualRoutes";
 import vehicleRoutes from "./api/routes/vehicleRoutes";
-app.use("/api", eventRoutes);
-app.use("/api", dayRoutes);
-app.use("/api", calendarRoutes);
-app.use("/api", transportationRoutes);
-app.use("/api", familyRoutes);
-app.use("/api", familyIndividualRoutes);
-app.use("/api", vehicleRoutes);
+app.use("/api", requireAuth, eventRoutes);
+app.use("/api", requireAuth, dayRoutes);
+app.use("/api", requireAuth, calendarRoutes);
+app.use("/api", requireAuth, transportationRoutes);
+app.use("/api", requireAuth, familyRoutes);
+app.use("/api", requireAuth, familyIndividualRoutes);
+app.use("/api", requireAuth, vehicleRoutes);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

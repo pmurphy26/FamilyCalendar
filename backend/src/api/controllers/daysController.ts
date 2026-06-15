@@ -1,10 +1,5 @@
 import { Request, Response } from "express";
-import { controller } from "../../database/db";
-import {
-  addEventsToDB,
-  getEventsForDayWithID,
-  getEventWithID,
-} from "../logic/events";
+import { addEventsToDB } from "../logic/events";
 import { CalendarEvent } from "@shared/types";
 import {
   createDayWithCalendarID,

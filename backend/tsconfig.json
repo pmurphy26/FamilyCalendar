@@ -2,20 +2,22 @@
   "compilerOptions": {
     "composite": true,
     "target": "ES2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "rootDir": "src",
     "outDir": "js_src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "baseUrl": "..",
+
     "paths": {
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["../shared/*"]
     }
   },
+
   "include": ["src/**/*.ts"],
+
   "references": [
     { "path": "../shared" }
   ]

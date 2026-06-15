@@ -11,11 +11,21 @@ const getEvent = async (req, res) => {
             return;
         }
         const result = await (0, events_1.getEventWithID)(id);
+        if (!result) {
+            return res
+                .status(404)
+                .json({ error: `Unable to get event with ${id} from database` });
+        }
         res.json(result);
     }
     catch (err) {
-        console.error("DB ERROR:", err);
-        res.status(500).json({ error: err });
+        //console.error("DB ERROR:", err);
+        if (err instanceof Error) {
+            res.status(500).json({ error: err?.message ?? "unknown error" });
+        }
+        else {
+            res.status(500).json({ error: "unknown error occured" });
+        }
     }
 };
 exports.getEvent = getEvent;
@@ -53,7 +63,7 @@ const addEvents = async (req, res) => {
         }
         const { days } = req.body;
         if (!days) {
-            res.status(400).json({ error: "Request body must have field 'days'" });
+            res.status(422).json({ error: "Request body must have field 'days'" });
             return;
         }
         const calendarEventsToAdd = {};
@@ -73,8 +83,12 @@ const addEvents = async (req, res) => {
                         });
                     }
                     else {
-                        const newID = await (0, days_1.createDayWithCalendarID)(calendarID, calendarDate);
-                        calendarEventsToAdd[newID] = events;
+                        const newCalendarDay = await (0, days_1.createDayWithCalendarID)(calendarID, calendarDate);
+                        if (!newCalendarDay || !newCalendarDay.id) {
+                            throw new Error(`error creating new calendar day for 
+                ${JSON.stringify(calendarDate)} on calendar with id ${calendarID}`);
+                        }
+                        calendarEventsToAdd[newCalendarDay.id] = events;
                     }
                 }
                 else {
@@ -88,8 +102,13 @@ const addEvents = async (req, res) => {
                 calendarEventsToAdd[dayID] = events;
             }
         }
-        await (0, events_1.addEventsToDB)(calendarEventsToAdd);
-        res.status(201).json({ message: "Events inserted successfully" });
+        const addSuccessful = await (0, events_1.addEventsToDB)(calendarEventsToAdd);
+        if (!addSuccessful) {
+            return res
+                .status(404)
+                .json({ error: "unable to add all events to database" });
+        }
+        res.status(201).json({ success: true });
     }
     catch (err) {
         console.error("DB ERROR:", err);
@@ -153,9 +172,7 @@ const updateEvent = async (req, res) => {
                     const eventDayID = await (0, events_1.updateEventInDB)(event, newID);
                     //console.log(successfulAlter);
                     if (eventDayID != -1) {
-                        res
-                            .status(201)
-                            .json({
+                        res.status(201).json({
                             result: eventDayID,
                             message: "Event altered successfully",
                         });

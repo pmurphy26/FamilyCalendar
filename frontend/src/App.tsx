@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import type { Family, FamilyIndividual, UIState } from "@shared/types";
+import type {
+  AuthState,
+  Family,
+  FamilyIndividual,
+  UIState,
+} from "@shared/types";
 import {
   deleteFamilyMemberWithID,
   getFamilyForIndividualWithID,
-} from "./helpers.ts/apiCalls";
+} from "./helpers/apiCalls";
 import { CalendarUI } from "./UIAssets/CalendarUI";
 import { NavigationHeaderBar } from "./UIAssets/NavigationBar";
 import { EditFamilyUI } from "./UIAssets/EditFamilyUI";
@@ -12,14 +17,23 @@ import { EditFamilyUI } from "./UIAssets/EditFamilyUI";
 /**
  * Main application UI
  */
-function App() {
-  const userID: number = 0; //TODO: Create some sort of login system to make this dynamic
+export function CalendarApp({
+  rh,
+  logout,
+}: {
+  rh: AuthState;
+  logout: () => void;
+}) {
+  const userID: number = rh.user?.familyIndividualID ?? -1; //TODO: Create some sort of login system to make this dynamic
   const [myFamily, setMyFamily] = useState<Family>({} as Family);
   const [currentUIState, setCurrentUIState] = useState<UIState>("CALENDAR");
 
   useEffect(() => {
     const fetchFamily = async () => {
-      const userFamily = await getFamilyForIndividualWithID(userID);
+      const userFamily = await getFamilyForIndividualWithID(
+        userID,
+        rh?.token ?? "",
+      );
       setMyFamily(userFamily);
     };
 
@@ -30,7 +44,7 @@ function App() {
 
   async function deleteFamilyIndividual(id: number) {
     //const successfulDelete =
-    await deleteFamilyMemberWithID(id);
+    await deleteFamilyMemberWithID(id, rh?.token ?? "");
 
     //console.log(successfulDelete);
   }
@@ -47,7 +61,7 @@ function App() {
         }}
       />
       {currentUIState == "CALENDAR" && (
-        <CalendarUI calendarID={0} myFamily={myFamily} />
+        <CalendarUI calendarID={0} myFamily={myFamily} rh={rh} />
       )}
       {currentUIState == "EDIT" && (
         <EditFamilyUI
@@ -66,10 +80,12 @@ function App() {
             //backend call to delete
             await deleteFamilyIndividual(fi.id);
           }}
+          rh={rh}
+          logout={logout}
         />
       )}
     </div>
   );
 }
 
-export default App;
+export default CalendarApp;

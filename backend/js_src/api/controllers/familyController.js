@@ -10,6 +10,11 @@ const getFamily = async (req, res) => {
             return;
         }
         const result = await (0, family_1.getFamilyForIndividualWithID)(id);
+        if (!result) {
+            return res.status(400).json({
+                error: `unable to get family for individual with id ${id}`,
+            });
+        }
         res.json(result);
     }
     catch (err) {

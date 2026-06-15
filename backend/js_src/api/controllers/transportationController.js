@@ -32,20 +32,28 @@ const addTransportations = async (req, res) => {
             return;
         }
         const transportationsToAdd = {};
-        for (const transportationForEvent of transportation) {
-            const { eventID, details } = transportationForEvent;
-            /*if (!Array.isArray(events)) {
-              res.status(400).json({ error: "'events' must be an array" });
-              return;
-            }*/
-            transportationsToAdd[eventID] = details;
+        for (const { eventID, details } of transportation) {
+            if (!transportationsToAdd[eventID]) {
+                transportationsToAdd[eventID] = {};
+            }
+            for (const [type, transportationForEvent] of Object.entries(details)) {
+                //TODO: check transportationForEvent has all req fields
+                transportationsToAdd[eventID][type] =
+                    transportationForEvent;
+            }
         }
+        //console.log(transportationsToAdd);
         await (0, transportation_1.addTransportationsToDB)(transportationsToAdd);
-        res.status(201).json({ message: "Events inserted successfully" });
+        res.status(201).json({ message: "Transportation inserted successfully" });
     }
     catch (err) {
         console.error("DB ERROR:", err);
-        res.status(500).json({ error: err });
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message });
+        }
+        else {
+            res.status(500).json({ error: err });
+        }
     }
 };
 exports.addTransportations = addTransportations;
@@ -62,12 +70,32 @@ const updateTransportation = async (req, res) => {
                 .json({ error: "Request body needs fields eventID and details" });
             return;
         }
-        await (0, transportation_1.alterTransportation)(eventID, details);
-        res.status(201).json({ message: "Events inserted successfully" });
+        //console.log(`Passing details as ${JSON.stringify(details)}`);
+        const { arrival, departure } = details;
+        //console.log(`Passing details as ${JSON.stringify(arrival)}`);
+        //console.log(`Passing details as ${JSON.stringify(departure)}`);
+        if (arrival) {
+            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, arrival);
+            if (!successfulAlter) {
+                throw new Error(`Failed to successfully alter arrival in database`);
+            }
+        }
+        if (departure) {
+            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, departure);
+            if (!successfulAlter) {
+                throw new Error(`Failed to successfully alter depature in database`);
+            }
+        }
+        res.status(201).json({ message: "Transportation updated successfully" });
     }
     catch (err) {
         console.error("DB ERROR:", err);
-        res.status(500).json({ error: err });
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message });
+        }
+        else {
+            res.status(500).json({ error: err });
+        }
     }
 };
 exports.updateTransportation = updateTransportation;

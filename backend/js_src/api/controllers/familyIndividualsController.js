@@ -17,6 +17,9 @@ const createFamilyIndividual = async (req, res) => {
             }
         }
         const result = await (0, familyIndividuals_1.createIndividualForFamily)(id, individual);
+        if (!result) {
+            return res.status(409).json({ error: "error inserting into databse" });
+        }
         res.json(result);
     }
     catch (err) {

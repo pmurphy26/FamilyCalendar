@@ -7,75 +7,139 @@ exports.createDayWithCalendarID = createDayWithCalendarID;
 const db_1 = require("../../database/db");
 const events_1 = require("./events");
 async function getDayWithID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM CalendarDay WHERE id = $1`, [id]);
-    if (result.rowCount == 0) {
-        throw new Error(`No event found with ID ${id}`);
-    }
-    const row = result.rows[0];
-    const required_fields = ["id", "calendarid", "dayday", "daymonth", "dayyear"];
-    for (const r_field of required_fields) {
-        if (!(r_field in row)) {
-            throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
+    try {
+        const result = await db_1.controller.query(`SELECT * FROM calendar_day WHERE id = $1`, [id]);
+        if (result.rowCount == 0) {
+            throw new Error(`No event found with ID ${id}`);
         }
-    }
-    const returnedEvent = {
-        date: {
-            day: row.dayday,
-            month: row.daymonth,
-            year: row.dayyear,
-        },
-        id: row.id,
-        events: await (0, events_1.getEventsForDayWithID)(id),
-    };
-    return returnedEvent;
-}
-async function getDaysWithCalendarID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM CalendarDay WHERE calendarid = $1`, [id]);
-    if (result.rowCount == 0) {
-        throw new Error(`No event found with ID ${id}`);
-    }
-    const rows = result.rows;
-    const required_fields = ["id", "calendarid", "dayday", "daymonth", "dayyear"];
-    for (const row of rows) {
+        const row = result.rows[0];
+        const required_fields = [
+            "id",
+            "calendar_id",
+            "day_day",
+            "day_month",
+            "day_year",
+        ];
         for (const r_field of required_fields) {
             if (!(r_field in row)) {
                 throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
             }
         }
-    }
-    const returnedEvents = await Promise.all(rows.map(async (row) => {
-        return {
+        const returnedEvent = {
             date: {
-                day: row.dayday,
-                month: row.daymonth,
-                year: row.dayyear,
+                day: row.day_day,
+                month: row.day_month,
+                year: row.day_year,
             },
             id: row.id,
-            events: await (0, events_1.getEventsForDayWithID)(row.id),
+            events: await (0, events_1.getEventsForDayWithID)(id),
         };
-    }));
-    return returnedEvents;
+        return returnedEvent;
+    }
+    catch (err) {
+        console.error(err);
+        return null;
+    }
+}
+async function getDaysWithCalendarID(id) {
+    try {
+        const result = await db_1.controller.query(`SELECT * FROM calendar_day WHERE calendar_id = $1`, [id]);
+        if (result.rowCount == 0) {
+            throw new Error(`No event found with ID ${id}`);
+        }
+        const rows = result.rows;
+        const required_fields = [
+            "id",
+            "calendar_id",
+            "day_day",
+            "day_month",
+            "day_year",
+        ];
+        for (const row of rows) {
+            for (const r_field of required_fields) {
+                if (!(r_field in row)) {
+                    throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
+                }
+            }
+        }
+        const returnedEvents = await Promise.all(rows.map(async (row) => {
+            return {
+                date: {
+                    day: row.day_day,
+                    month: row.day_month,
+                    year: row.day_year,
+                },
+                id: row.id,
+                events: await (0, events_1.getEventsForDayWithID)(row.id),
+            };
+        }));
+        return returnedEvents;
+    }
+    catch (err) {
+        console.error(err);
+        return [];
+    }
 }
 async function getCalendarDayIDByDate(d, cID) {
-    const result = await db_1.controller.query(`SELECT * FROM calendarday WHERE dayday = $1 AND daymonth = $2 AND dayyear = $3;`, [d.day, d.month, d.year]);
-    if (result.rowCount == 0) {
-        return await createDayWithCalendarID(cID, d);
+    try {
+        const result = await db_1.controller.query(`SELECT * 
+      FROM calendar_day 
+      WHERE 
+        day_day = $1 AND 
+        day_month = $2 AND
+        day_year = $3 AND
+        calendar_id = $4;`, [d.day, d.month, d.year, cID]);
+        if (result.rowCount == 0) {
+            const newDay = await createDayWithCalendarID(cID, d);
+            return newDay?.id ?? -1;
+        }
+        else {
+            return result.rows[0].id;
+        }
     }
-    else {
-        return result.rows[0].id;
+    catch (err) {
+        console.error(err);
+        return -1;
     }
 }
 async function createDayWithCalendarID(calendarID, newCalendarDay) {
-    const result = await db_1.controller.query(`INSERT INTO calendarday (calendarid, dayday, daymonth, dayyear) VALUES ($1, $2, $3, $4) RETURNING *`, [calendarID, newCalendarDay.day, newCalendarDay.month, newCalendarDay.year]);
-    if (result.rowCount == 0) {
-        throw new Error(`Could not create calendar date ${newCalendarDay.month}/${newCalendarDay.day}/${newCalendarDay.year} for calendar with id ${calendarID}`);
-    }
-    const row = result.rows[0];
-    const required_fields = ["id"];
-    for (const r_field of required_fields) {
-        if (!(r_field in row)) {
-            throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
+    try {
+        const result = await db_1.controller.query(`INSERT INTO calendar_day (
+        calendar_id, 
+        day_day,
+        day_month,
+        day_year
+      ) VALUES ($1, $2, $3, $4) 
+      RETURNING *;`, [
+            calendarID,
+            newCalendarDay.day,
+            newCalendarDay.month,
+            newCalendarDay.year,
+        ]);
+        if (result.rowCount == 0) {
+            throw new Error(`Could not create calendar date ${newCalendarDay.month}/${newCalendarDay.day}/${newCalendarDay.year} for calendar with id ${calendarID}`);
         }
+        const row = result.rows[0];
+        const required_fields = [
+            "id",
+            "calendar_id",
+            "day_day",
+            "day_month",
+            "day_year",
+        ];
+        for (const r_field of required_fields) {
+            if (!(r_field in row)) {
+                throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
+            }
+        }
+        return {
+            id: row.id,
+            date: newCalendarDay,
+            events: [],
+        };
     }
-    return row.id;
+    catch (err) {
+        console.error(err);
+        return null;
+    }
 }

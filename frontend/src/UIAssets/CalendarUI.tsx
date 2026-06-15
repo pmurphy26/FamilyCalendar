@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./CalendarUI.css";
 import { CalendarGrid, CalendarHeaderBar } from "./Calendar";
 import type {
+  AuthState,
   CalendarDate,
   CalendarDay,
   CalendarEvent,
@@ -13,21 +14,21 @@ import {
   datesEqual,
   daysInMonthDict,
   padNumberWithZeros,
-} from "../helpers.ts/constants";
+} from "../helpers/constants";
 import {
   CalendarDayEventUI,
   CalendarEventUI,
   CreateCalendarEventUI,
   EditCalendarEventUI,
 } from "./CalendarEvent";
-import { mockEvent } from "../helpers.ts/mockData";
+import { mockEvent } from "../helpers/mockData";
 import {
   createDrivingSituation,
   createEvent,
   editDrivingSituation,
   editEvent,
   getCalendarDaysInPeriod,
-} from "../helpers.ts/apiCalls";
+} from "../helpers/apiCalls";
 
 /**
  * Main application UI
@@ -35,13 +36,20 @@ import {
 export function CalendarUI({
   calendarID,
   myFamily,
+  rh,
 }: {
   calendarID: number;
   myFamily: Family;
+  rh: AuthState;
 }) {
+  const currDate: Date = new Date();
   const [period, setPeriod] = useState<"WEEK" | "MONTH">("WEEK");
   const [currentCalendarDay, setCurrentDay] = useState<CalendarDay>({
-    date: { day: new Date().getDate(), month: 4, year: 2026 },
+    date: {
+      day: currDate.getDate(),
+      month: currDate.getMonth() + 1,
+      year: currDate.getFullYear(),
+    },
     events: [],
   } as CalendarDay);
   const [calendarDaysInPeriod, setCalendarDaysInPeriod] = useState<
@@ -101,9 +109,7 @@ export function CalendarUI({
         )
       )
     ) {
-      /*console.log(
-        `Getting a new period: ${periodStart.month}/${periodStart.day}`,
-      );*/
+      //console.log(`Getting a new period: ${periodStart.month}/${periodStart.day}`);
       const allDaysInPeriod = await getNewPeriod(periodStart, periodEnd);
       setCalendarDaysInPeriod(allDaysInPeriod);
     }
@@ -125,6 +131,7 @@ export function CalendarUI({
       calendarID,
       newStart,
       newEnd,
+      rh?.token ?? "",
     );
 
     //console.log(daysWithEvents);
@@ -188,7 +195,11 @@ export function CalendarUI({
    *
    * @param e the calendar event being edited
    */
-  async function editCalendarEvent(e: CalendarEvent, d?: CalendarDate) {
+  async function editCalendarEvent(
+    e: CalendarEvent,
+    rh: AuthState,
+    d?: CalendarDate,
+  ) {
     //console.log(d);
     //console.log(e.notes);
     let eventDayID = -1;
@@ -204,7 +215,7 @@ export function CalendarUI({
           : -1;
 
       //console.log("New ID", newDayID);
-      const res = await editEvent(e, {
+      const res = await editEvent(e, rh?.token ?? "", {
         newCalendarDayID: newDayID,
         newDate: d,
       });
@@ -214,7 +225,7 @@ export function CalendarUI({
         eventDayID = res.result;
       }
     } else {
-      const res = await editEvent(e);
+      const res = await editEvent(e, rh?.token ?? "");
       //console.log("Data:", res);
       if (res.result) {
         eventDayID = res.result;
@@ -222,12 +233,60 @@ export function CalendarUI({
     }
 
     if (e.drivingSituation) {
-      //console.log(e.drivingSituation);
-      if (currentCalendarEvent.drivingSituation) {
-        await editDrivingSituation(e);
-      } else {
-        await createDrivingSituation(e);
+      const currentArrival = currentCalendarEvent.drivingSituation?.arrival;
+      const currentDeparture = currentCalendarEvent.drivingSituation?.departure;
+
+      const { arrival, departure } = e.drivingSituation;
+      console.log(currentArrival);
+      console.log(currentDeparture);
+      console.log(arrival);
+      console.log(departure);
+
+      if (!!arrival) {
+        if (!!currentArrival) {
+          //alter current driving event
+          console.log("alter arrival");
+          await editDrivingSituation(
+            { ...e, drivingSituation: { arrival: e.drivingSituation.arrival } },
+            rh?.token ?? "",
+          );
+        } else {
+          console.log("create new arrival");
+          //create new driving situation
+          await createDrivingSituation(
+            { ...e, drivingSituation: { arrival: e.drivingSituation.arrival } },
+            rh?.token ?? "",
+          );
+        }
       }
+
+      if (!!departure) {
+        if (!!currentDeparture && !!departure) {
+          console.log("alter departure");
+          //alter current driving event
+          await editDrivingSituation(
+            {
+              ...e,
+              drivingSituation: { departure: e.drivingSituation.departure },
+            },
+            rh?.token ?? "",
+          );
+        } else {
+          await createDrivingSituation(
+            {
+              ...e,
+              drivingSituation: { departure: e.drivingSituation.departure },
+            },
+            rh?.token ?? "",
+          );
+        }
+      }
+      /*
+      if (currentCalendarEvent.drivingSituation) {
+        await editDrivingSituation(e, rh?.token ?? "");
+      } else {
+        await createDrivingSituation(e, rh?.token ?? "");
+      }*/
     }
 
     return eventDayID;
@@ -239,11 +298,16 @@ export function CalendarUI({
    * @param c
    * @param d
    */
-  async function saveEditedEvent(c: CalendarEvent, d: CalendarDate) {
+  async function saveEditedEvent(
+    c: CalendarEvent,
+    rh: AuthState,
+    d: CalendarDate,
+  ) {
     //backend call to edit item
     const eventDateChanged = !datesAreEqual(d, currentCalendarDay.date);
     const newEventDayID = await editCalendarEvent(
       c,
+      rh,
       ...(eventDateChanged ? [d] : []),
     );
 
@@ -402,12 +466,14 @@ export function CalendarUI({
             {rightSideDisplayType == "CREATE" && (
               <CreateCalendarEventUI
                 family={myFamily}
+                familyIndividualID={rh.user?.familyIndividualID ?? -1}
                 openEvent={() => {
                   setRightSideDisplayType("DAY");
                 }}
-                createEvent={(c: CalendarEvent, newEventDate: CalendarDate) => {
-                  //console.log("Attempting to add event with title", c.title);
-
+                createEvent={async (
+                  c: CalendarEvent,
+                  newEventDate: CalendarDate,
+                ) => {
                   const newEventInPeriod: Boolean =
                     compareDates(calendarDaysInPeriod[0].date, newEventDate) <=
                       0 &&
@@ -426,7 +492,21 @@ export function CalendarUI({
                       } as CalendarDay),
                     );
                     //console.log("IDX:", idx);
-                    createEvent(calendarDaysInPeriod[idx].id ?? -1, c);
+
+                    if ((calendarDaysInPeriod[idx].id ?? -1) == -1) {
+                      //console.log("need to create new calendar day");
+                      await createEvent(-1, c, rh?.token ?? "", {
+                        calendarID: 0,
+                        calendarDate: newEventDate,
+                      });
+                    } else {
+                      //console.log("day should already exist");
+                      await createEvent(
+                        calendarDaysInPeriod[idx].id ?? -1,
+                        c,
+                        rh?.token ?? "",
+                      );
+                    }
                     setCalendarDaysInPeriod((prevPeriod) => {
                       const updatedPeriod = [...prevPeriod];
                       updatedPeriod[idx] = {
@@ -441,7 +521,7 @@ export function CalendarUI({
                       events: [...calendarDaysInPeriod[idx].events, c],
                     });
                   } else {
-                    createEvent(-1, c, {
+                    await createEvent(-1, c, rh?.token ?? "", {
                       calendarID: 0,
                       calendarDate: newEventDate,
                     });
@@ -461,7 +541,7 @@ export function CalendarUI({
                   setRightSideDisplayType("EVENT");
                 }}
                 saveEditedEvent={async (c: CalendarEvent, d: CalendarDate) =>
-                  saveEditedEvent(c, d)
+                  await saveEditedEvent(c, rh, d)
                 }
               />
             )}

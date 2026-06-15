@@ -12,12 +12,16 @@ export type CalendarDay = {
 export type CalendarEvent = {
   id: number;
   location: string;
-  time: CalendarTime;
+  startTime: CalendarTime;
+  endTime: CalendarTime;
   title: string;
   notes: string;
   createdBy: FamilyIndividual;
   for?: FamilyIndividual;
-  drivingSituation?: TransportationForEvent;
+  drivingSituation?: {
+    arrival?: TransportationForEvent;
+    departure?: TransportationForEvent;
+  };
 };
 
 export type Family = {
@@ -71,3 +75,35 @@ export type CalendarTime = {
 };
 
 export type UIState = "CALENDAR" | "EDIT";
+
+// Auth and user login stuff
+export type AuthUser = {
+  id: number;
+  username: string;
+  familyIndividualID: number | null;
+};
+
+export type AuthState = {
+  user: AuthUser | null;
+  token: string | null;
+};
+
+const STORAGE_KEY = "rushHourAuth";
+
+export function loadAuthState(): AuthState {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { user: null, token: null };
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { user: null, token: null };
+  }
+}
+
+export function saveAuthState(state: AuthState) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+export function clearAuthState() {
+  localStorage.removeItem(STORAGE_KEY);
+}

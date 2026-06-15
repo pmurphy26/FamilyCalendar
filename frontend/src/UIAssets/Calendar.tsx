@@ -11,7 +11,7 @@ import {
   monthNumToString,
   padNumberWithZeros,
   daysInMonthDict,
-} from "../helpers.ts/constants";
+} from "../helpers/constants";
 import type {
   CalendarDate,
   CalendarDay,
@@ -307,7 +307,8 @@ function CalendarWeekDayColumnEventUI({
         {calendarEvent.title}
       </div>
       <div className="calendar-weekday-column-event-text">
-        <p>{`${padNumberWithZeros(calendarEvent.time.hour, 2)}:${padNumberWithZeros(calendarEvent.time.minute, 2)}`}</p>{" "}
+        <p>{`
+        ${padNumberWithZeros(calendarEvent.startTime.hour, 2)}:${padNumberWithZeros(calendarEvent.startTime.minute, 2)}`}</p>{" "}
         {/*${calendarEvent.time.isAM ? "AM" : "PM"}`}</p>*/}
       </div>
     </div>

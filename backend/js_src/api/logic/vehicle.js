@@ -13,7 +13,7 @@ async function getVehicleWithID(id) {
         throw new Error(`No vehicle found with ID ${id}`);
     }
     const row = result.rows[0];
-    const required_fields = ["id", "vehiclename", "numpeoplecanfit"];
+    const required_fields = ["id", "vehicle_name", "num_people_can_fit"];
     for (const r_field of required_fields) {
         if (!(r_field in row)) {
             throw new Error(`Comment doesn't contain all fields. ${row} is missing ${r_field}`);
@@ -21,8 +21,8 @@ async function getVehicleWithID(id) {
     }
     return {
         id: row.id,
-        name: row.vehiclename,
-        numPeopleCanFit: row.numpeoplecanfit,
+        name: row.vehicle_name,
+        numPeopleCanFit: row.num_people_can_fit,
     };
 }
 async function createVehicleForFamily(familyID, newVehicle) {

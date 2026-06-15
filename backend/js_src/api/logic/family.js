@@ -5,32 +5,38 @@ exports.getAllFamilyVehiclesWithID = getAllFamilyVehiclesWithID;
 exports.getAllFamilyMembersWithID = getAllFamilyMembersWithID;
 const db_1 = require("../../database/db");
 async function getFamilyForIndividualWithID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM familyindividuals WHERE id = $1`, [id]);
-    if (result.rowCount == 0) {
-        throw new Error(`No vehicle found with ID ${id}`);
-    }
-    const row = result.rows[0];
-    const required_fields = ["familyid"];
-    for (const r_field of required_fields) {
-        if (!(r_field in row)) {
-            throw new Error(`Family individual doesn't contain all fields. ${row} is missing ${r_field}`);
+    try {
+        const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE id = $1`, [id]);
+        if (result.rowCount == 0) {
+            throw new Error(`No individual found with ID ${id}`);
         }
+        const row = result.rows[0];
+        const required_fields = ["family_id"];
+        for (const r_field of required_fields) {
+            if (!(r_field in row)) {
+                throw new Error(`Family individual doesn't contain all fields. ${row} is missing ${r_field}`);
+            }
+        }
+        const familyVehicles = await getAllFamilyVehiclesWithID(row.family_id);
+        return {
+            id: row.family_id,
+            members: await getAllFamilyMembersWithID(row.family_id),
+            ...(familyVehicles.length && { vehicles: familyVehicles }),
+        };
     }
-    const familyVehicles = await getAllFamilyVehiclesWithID(row.familyid);
-    return {
-        id: row.familyid,
-        members: await getAllFamilyMembersWithID(row.familyid),
-        ...(familyVehicles.length && { vehicles: familyVehicles }),
-    };
+    catch (err) {
+        console.error(err);
+        return null;
+    }
 }
 async function getAllFamilyVehiclesWithID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM vehicle WHERE familyid = $1`, [id]);
+    const result = await db_1.controller.query(`SELECT * FROM vehicle WHERE family_id = $1`, [id]);
     if (result.rowCount == 0) {
         return [];
         //throw new Error(`No individuals found with family ID ${id}`);
     }
     const rows = result.rows;
-    const required_fields = ["id", "vehiclename", "numpeoplecanfit"];
+    const required_fields = ["id", "vehicle_name", "num_people_can_fit"];
     const familyVehicles = rows.map((row) => {
         for (const r_field of required_fields) {
             if (!(r_field in row)) {
@@ -39,34 +45,46 @@ async function getAllFamilyVehiclesWithID(id) {
         }
         return {
             id: row.id,
-            name: row.vehiclename,
-            numPeopleCanFit: row.numpeoplecanfit,
+            name: row.vehicle_name,
+            numPeopleCanFit: row.num_people_can_fit,
         };
     });
     return familyVehicles;
 }
 async function getAllFamilyMembersWithID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM familyindividuals WHERE familyid = $1`, [id]);
-    if (result.rowCount == 0) {
-        return [];
-        //throw new Error(`No individuals found with family ID ${id}`);
-    }
-    const rows = result.rows;
-    const required_fields = ["id", "name", "role", "candrive", "canedit"];
-    const familyMembers = rows.map((row) => {
-        for (const r_field of required_fields) {
-            if (!(r_field in row)) {
-                throw new Error(`Individual doesn't contain all fields. ${row} is missing ${r_field}`);
-            }
+    try {
+        const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE family_id = $1`, [id]);
+        if (result.rowCount == 0) {
+            return [];
+            //throw new Error(`No individuals found with family ID ${id}`);
         }
-        return {
-            id: row.id,
-            name: row.name,
-            role: row.role,
-            canDrive: row.candrive,
-            canEditCalendar: row.canedit,
-            ...(row.colorstr && { colorStr: row.colorstr }),
-        };
-    });
-    return familyMembers;
+        const rows = result.rows;
+        const required_fields = [
+            "id",
+            "individual_name",
+            "individual_role",
+            "can_drive",
+            "can_edit",
+        ];
+        const familyMembers = rows.map((row) => {
+            for (const r_field of required_fields) {
+                if (!(r_field in row)) {
+                    throw new Error(`Individual doesn't contain all fields. ${row} is missing ${r_field}`);
+                }
+            }
+            return {
+                id: row.id,
+                name: row.individual_name,
+                role: row.individual_role,
+                canDrive: row.can_drive,
+                canEditCalendar: row.can_edit,
+                ...(row.color_str && { colorStr: row.color_str }),
+            };
+        });
+        return familyMembers;
+    }
+    catch (err) {
+        console.error(err);
+        return [];
+    }
 }

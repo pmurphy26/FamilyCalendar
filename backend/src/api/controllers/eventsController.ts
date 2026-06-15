@@ -6,7 +6,7 @@ import {
   getEventWithID,
   updateEventInDB,
 } from "../logic/events";
-import { CalendarEvent } from "@shared/types";
+import { CalendarDay, CalendarEvent } from "@shared/types";
 import { createDayWithCalendarID, getCalendarDayIDByDate } from "../logic/days";
 
 export const getEvent = async (req: Request, res: Response) => {
@@ -19,10 +19,21 @@ export const getEvent = async (req: Request, res: Response) => {
     }
 
     const result = await getEventWithID(id);
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ error: `Unable to get event with ${id} from database` });
+    }
+
     res.json(result);
   } catch (err) {
-    console.error("DB ERROR:", err);
-    res.status(500).json({ error: err });
+    //console.error("DB ERROR:", err);
+    if (err instanceof Error) {
+      res.status(500).json({ error: err?.message ?? "unknown error" });
+    } else {
+      res.status(500).json({ error: "unknown error occured" });
+    }
   }
 };
 
@@ -36,6 +47,7 @@ export const getEventsForDay = async (req: Request, res: Response) => {
     }
 
     const result = await getEventsForDayWithID(id);
+
     res.json(result);
   } catch (err) {
     console.error("DB ERROR:", err);
@@ -63,7 +75,7 @@ export const addEvents = async (req: Request, res: Response) => {
     const { days } = req.body;
 
     if (!days) {
-      res.status(400).json({ error: "Request body must have field 'days'" });
+      res.status(422).json({ error: "Request body must have field 'days'" });
       return;
     }
 
@@ -86,11 +98,17 @@ export const addEvents = async (req: Request, res: Response) => {
               error: `calendar info must have calendarID and calendarDate fields ${calendarInfo}`,
             });
           } else {
-            const newID = await createDayWithCalendarID(
+            const newCalendarDay = await createDayWithCalendarID(
               calendarID,
               calendarDate,
             );
-            calendarEventsToAdd[newID] = events;
+            if (!newCalendarDay || !newCalendarDay.id) {
+              throw new Error(
+                `error creating new calendar day for 
+                ${JSON.stringify(calendarDate)} on calendar with id ${calendarID}`,
+              );
+            }
+            calendarEventsToAdd[newCalendarDay.id] = events;
           }
         } else {
           res
@@ -102,9 +120,15 @@ export const addEvents = async (req: Request, res: Response) => {
         calendarEventsToAdd[dayID] = events;
       }
     }
-    await addEventsToDB(calendarEventsToAdd);
+    const addSuccessful = await addEventsToDB(calendarEventsToAdd);
 
-    res.status(201).json({ message: "Events inserted successfully" });
+    if (!addSuccessful) {
+      return res
+        .status(404)
+        .json({ error: "unable to add all events to database" });
+    }
+
+    res.status(201).json({ success: true });
   } catch (err) {
     console.error("DB ERROR:", err);
     res.status(500).json({ error: err });
@@ -173,12 +197,10 @@ export const updateEvent = async (req: Request, res: Response) => {
           const eventDayID = await updateEventInDB(event, newID);
           //console.log(successfulAlter);
           if (eventDayID != -1) {
-            res
-              .status(201)
-              .json({
-                result: eventDayID,
-                message: "Event altered successfully",
-              });
+            res.status(201).json({
+              result: eventDayID,
+              message: "Event altered successfully",
+            });
             return;
           } else {
             throw new Error(
