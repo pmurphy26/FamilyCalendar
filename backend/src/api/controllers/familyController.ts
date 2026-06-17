@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
-import { controller } from "../../database/db";
 import { createNewFamily, getFamilyForIndividualWithID } from "../logic/family";
-import { CalendarEvent, TransportationForEvent } from "@shared/types";
-import { createDayWithCalendarID, getCalendarDayIDByDate } from "../logic/days";
 
 export const getFamily = async (req: Request, res: Response) => {
   try {

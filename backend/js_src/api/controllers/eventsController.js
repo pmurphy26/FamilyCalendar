@@ -73,7 +73,9 @@ const addEvents = async (req, res) => {
                 res.status(400).json({ error: "'events' must be an array" });
                 return;
             }
+            //TODO: verify contents of events are valid
             if (dayID == -1) {
+                /* Calendar day doesn't exist in DB, need to create one */
                 if (day.calendarInfo) {
                     const calendarInfo = day.calendarInfo;
                     const { calendarID, calendarDate } = calendarInfo;
@@ -83,7 +85,9 @@ const addEvents = async (req, res) => {
                         });
                     }
                     else {
+                        /* API call to create new calendar day */
                         const newCalendarDay = await (0, days_1.createDayWithCalendarID)(calendarID, calendarDate);
+                        /* Verify creation was successful and add it to calendarEventsToAdd*/
                         if (!newCalendarDay || !newCalendarDay.id) {
                             throw new Error(`error creating new calendar day for 
                 ${JSON.stringify(calendarDate)} on calendar with id ${calendarID}`);
@@ -102,17 +106,22 @@ const addEvents = async (req, res) => {
                 calendarEventsToAdd[dayID] = events;
             }
         }
-        const addSuccessful = await (0, events_1.addEventsToDB)(calendarEventsToAdd);
-        if (!addSuccessful) {
+        const addedEvents = await (0, events_1.addEventsToDB)(calendarEventsToAdd);
+        if (Object.keys(addedEvents).length == 0) {
             return res
                 .status(404)
-                .json({ error: "unable to add all events to database" });
+                .json({ error: "unable to add events to database" });
         }
-        res.status(201).json({ success: true });
+        res.status(201).json({ events: addedEvents });
     }
     catch (err) {
-        console.error("DB ERROR:", err);
-        res.status(500).json({ error: err });
+        console.error(err);
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message });
+        }
+        else {
+            res.status(500).json({ error: err });
+        }
     }
 };
 exports.addEvents = addEvents;

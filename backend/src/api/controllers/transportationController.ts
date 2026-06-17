@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
-import { controller } from "../../database/db";
 import {
   addTransportationsToDB,
   alterTransportation,
   getTransportationWithEventID,
 } from "../logic/transportation";
-import { CalendarEvent, TransportationForEvent } from "@shared/types";
-import { createDayWithCalendarID, getCalendarDayIDByDate } from "../logic/days";
+import { TransportationForEvent } from "@shared/types";
 
 export const getTransportation = async (req: Request, res: Response) => {
   try {

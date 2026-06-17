@@ -23,35 +23,46 @@ export async function createEvent(
   createdEvent: CalendarEvent,
   authToken: string,
   calendarInfo?: { calendarID: number; calendarDate: CalendarDate },
-): Promise<void> {
+): Promise<CalendarEvent | null> {
   //console.log("adding event to day with id:", calendarDayID);
 
-  const res = await fetch("http://localhost:3001/api/events/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${authToken}`,
-    },
-    body: JSON.stringify({
-      days: [
-        {
-          dayID: calendarDayID,
-          events: [createdEvent],
-          ...(calendarDayID == -1 &&
-            calendarInfo && {
-              calendarInfo: calendarInfo,
-            }),
-        },
-      ],
-    }),
-  });
+  try {
+    const res = await fetch("http://localhost:3001/api/events/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        days: [
+          {
+            dayID: calendarDayID,
+            events: [createdEvent],
+            ...(calendarDayID == -1 &&
+              calendarInfo && {
+                calendarInfo: calendarInfo,
+              }),
+          },
+        ],
+      }),
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to create event: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Failed to create event: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const events = Object.values(data.events).flat();
+    console.log(data);
+    console.log(events);
+    console.log(events[0]);
+    const createdEventID = (events[0] as unknown as CalendarEvent)?.id ?? -1;
+    const newEvent = { ...createdEvent, id: createdEventID };
+    return newEvent;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
-
-  const data = await res.json();
-  return data;
 }
 
 /**
@@ -127,20 +138,22 @@ export async function createDrivingSituation(
   editedEvent: CalendarEvent,
   authToken: string,
 ) {
+  const reqBody = JSON.stringify({
+    transportation: [
+      {
+        eventID: editedEvent.id,
+        details: { ...editedEvent.drivingSituation },
+      },
+    ],
+  });
+  console.log(reqBody);
   const res = await fetch("http://localhost:3001/api/transportation/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${authToken}`,
     },
-    body: JSON.stringify({
-      transportation: [
-        {
-          eventID: editedEvent.id,
-          details: { ...editedEvent.drivingSituation },
-        },
-      ],
-    }),
+    body: reqBody,
   });
 
   if (!res.ok) {

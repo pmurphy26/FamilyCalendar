@@ -230,13 +230,18 @@ export async function getEventsForDayWithID(
 
 export async function addEventsToDB(
   events: Record<number, CalendarEvent[]>,
-): Promise<boolean> {
+): Promise<Record<number, CalendarEvent[]>> {
   try {
+    const addedEvents: Record<number, CalendarEvent[]> = {};
     await Promise.all(
-      Object.entries(events).flatMap(([dayID, eventsOnDay]) => {
-        return eventsOnDay.map((event) => {
-          return controller.query(
-            `INSERT INTO calendar_event 
+      Object.entries(events).flatMap(async ([dayIDStr, eventsOnDay]) => {
+        const dayID = Number(dayIDStr);
+        const eod: CalendarEvent[] = [];
+
+        await Promise.all(
+          eventsOnDay.map(async (event) => {
+            const res = await controller.query(
+              `INSERT INTO calendar_event 
             (
             calendar_day_id, 
             event_title, 
@@ -250,28 +255,40 @@ export async function addEventsToDB(
             event_notes, 
             created_by_id
             ${event.for ? ", for_id" : ""}) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11${event.for ? ", $12" : ""});`,
-            [
-              //event.id,
-              dayID,
-              event.title,
-              event.startTime.hour,
-              event.startTime.minute,
-              event.startTime.isAM,
-              event.endTime.hour,
-              event.endTime.minute,
-              event.endTime.isAM,
-              event.location,
-              event.notes,
-              event.createdBy.id,
-              ...(event.for ? [event.for.id] : []),
-            ],
-          );
-        });
+            VALUES (
+            $1, $2, $3, $4, $5, $6, $7, 
+            $8, $9, $10, $11${event.for ? ", $12" : ""})
+            RETURNING id;`,
+              [
+                //event.id,
+                dayID,
+                event.title,
+                event.startTime.hour,
+                event.startTime.minute,
+                event.startTime.isAM,
+                event.endTime.hour,
+                event.endTime.minute,
+                event.endTime.isAM,
+                event.location,
+                event.notes,
+                event.createdBy.id,
+                ...(event.for ? [event.for.id] : []),
+              ],
+            );
+
+            if (res.rowCount == 0) {
+              return;
+            }
+
+            eod.push({ ...event, id: res.rows[0].id });
+          }),
+        );
+
+        addedEvents[dayID] = eod;
       }),
     );
 
-    return true;
+    return addedEvents;
   } catch (err) {
     if (err instanceof Error) {
       console.error(`Error while inserting events: ${err.message}`);
@@ -279,23 +296,8 @@ export async function addEventsToDB(
       console.error(`Unknown error while inserting events`);
     }
 
-    return false;
+    return {};
   }
-}
-
-async function deleteCommentByID(id: number): Promise<boolean> {
-  const result = await controller.query(
-    `DELETE FROM public."Comments"
-    WHERE id = $1
-    RETURNING *;`,
-    [id],
-  );
-
-  if (result.rows.length === 0) {
-    return false;
-  }
-
-  return true;
 }
 
 export async function updateEventInDB(

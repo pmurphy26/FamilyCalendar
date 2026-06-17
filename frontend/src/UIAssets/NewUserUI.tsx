@@ -27,7 +27,7 @@ export default function NewUserPage({
   const [familyCode, setFamilyCode] = useState("");
 
   return (
-    <div className="page-container">
+    <div className="new-user-page-container">
       <h1 className="page-title">Create New User</h1>
 
       <div className="form-card">

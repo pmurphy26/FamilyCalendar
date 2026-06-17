@@ -230,62 +230,7 @@ export function CalendarUI({
       }
     }
 
-    if (e.drivingSituation) {
-      const currentArrival = currentCalendarEvent.drivingSituation?.arrival;
-      const currentDeparture = currentCalendarEvent.drivingSituation?.departure;
-
-      const { arrival, departure } = e.drivingSituation;
-      console.log(currentArrival);
-      console.log(currentDeparture);
-      console.log(arrival);
-      console.log(departure);
-
-      if (!!arrival) {
-        if (!!currentArrival) {
-          //alter current driving event
-          console.log("alter arrival");
-          await editDrivingSituation(
-            { ...e, drivingSituation: { arrival: e.drivingSituation.arrival } },
-            rh?.token ?? "",
-          );
-        } else {
-          console.log("create new arrival");
-          //create new driving situation
-          await createDrivingSituation(
-            { ...e, drivingSituation: { arrival: e.drivingSituation.arrival } },
-            rh?.token ?? "",
-          );
-        }
-      }
-
-      if (!!departure) {
-        if (!!currentDeparture && !!departure) {
-          console.log("alter departure");
-          //alter current driving event
-          await editDrivingSituation(
-            {
-              ...e,
-              drivingSituation: { departure: e.drivingSituation.departure },
-            },
-            rh?.token ?? "",
-          );
-        } else {
-          await createDrivingSituation(
-            {
-              ...e,
-              drivingSituation: { departure: e.drivingSituation.departure },
-            },
-            rh?.token ?? "",
-          );
-        }
-      }
-      /*
-      if (currentCalendarEvent.drivingSituation) {
-        await editDrivingSituation(e, rh?.token ?? "");
-      } else {
-        await createDrivingSituation(e, rh?.token ?? "");
-      }*/
-    }
+    await createOrEditDrivingSituationInDB(e);
 
     return eventDayID;
   }
@@ -312,7 +257,6 @@ export function CalendarUI({
     //update calendar event
     setCurrentCalendarEvent(c);
 
-    //TODO: Edit this to handle date changes
     if (!eventDateChanged) {
       //update calendar day
       const newEvents = [
@@ -363,6 +307,162 @@ export function CalendarUI({
     }
 
     setRightSideDisplayType("EVENT");
+  }
+
+  /**
+   * Creates the given event with the given date
+   *
+   * @param c
+   * @param newEventDate
+   */
+  async function createNewEvent(c: CalendarEvent, newEventDate: CalendarDate) {
+    const newEventInPeriod: Boolean =
+      compareDates(calendarDaysInPeriod[0].date, newEventDate) <= 0 &&
+      compareDates(
+        newEventDate,
+        calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date,
+      ) <= 0;
+
+    let createdEvent: CalendarEvent | null = null;
+    console.log("creating new period", newEventInPeriod);
+    if (newEventInPeriod) {
+      /* NEW EVENT IS BEING ADDED TO CURRENT PERIOD */
+      const idx = calendarDaysInPeriod.findIndex((dip) =>
+        datesEqual(dip, {
+          date: newEventDate,
+          events: [] as CalendarEvent[],
+        } as CalendarDay),
+      );
+      //console.log("IDX:", idx);
+
+      if ((calendarDaysInPeriod[idx].id ?? -1) == -1) {
+        /* NEW EVENT'S DAY DOESN'T EXIST IN DB */
+        console.log("create new day");
+        createdEvent = await createEvent(-1, c, rh?.token ?? "", {
+          calendarID: calendarID,
+          calendarDate: newEventDate,
+        });
+      } else {
+        /* NEW EVENT'S DAY EXISTS IN DB */
+        console.log("day should already exist");
+        createdEvent = await createEvent(
+          calendarDaysInPeriod[idx].id ?? -1,
+          c,
+          rh?.token ?? "",
+        );
+      }
+    } else {
+      createdEvent = await createEvent(-1, c, rh?.token ?? "", {
+        calendarID: calendarID,
+        calendarDate: newEventDate,
+      });
+    }
+
+    console.log(createdEvent);
+
+    //TODO: implement creating driving situation
+    if (createdEvent?.id) {
+      console.log("adding driving situation");
+      await createOrEditDrivingSituationInDB({ ...c, id: createdEvent?.id });
+    }
+    /*
+     * TODO: run get current period with the same period params
+     * that are currently in place or with the new event's date
+     */
+    if (newEventInPeriod) {
+      /*setCalendarDaysInPeriod((prevPeriod) => {
+        const updatedPeriod = [...prevPeriod];
+        updatedPeriod[idx] = {
+          ...updatedPeriod[idx],
+          events: [...updatedPeriod[idx].events, c],
+        };
+        return updatedPeriod;
+      });
+
+      setCurrentDay({
+        ...calendarDaysInPeriod[idx],
+        events: [...calendarDaysInPeriod[idx].events, c],
+      });*/
+    }
+
+    setRightSideDisplayType("DAY");
+  }
+
+  /**
+   * Helper function that takes in a calendar event and performs the needed
+   * edit or create API call for it's transportation
+   *
+   * @param e calendar event that will have driving situations acted on
+   */
+  async function createOrEditDrivingSituationInDB(
+    e: CalendarEvent,
+  ): Promise<void> {
+    if (e.drivingSituation) {
+      const currentArrival = currentCalendarEvent.drivingSituation?.arrival;
+      const currentDeparture = currentCalendarEvent.drivingSituation?.departure;
+
+      const { arrival, departure } = e.drivingSituation;
+      console.log(currentArrival);
+      console.log(currentDeparture);
+      console.log(arrival);
+      console.log(departure);
+
+      if (!!arrival) {
+        if (!!currentArrival) {
+          //alter current driving event
+          console.log("alter arrival");
+          await editDrivingSituation(
+            {
+              ...e,
+              drivingSituation: {
+                arrival: e.drivingSituation.arrival,
+              },
+            },
+            rh?.token ?? "",
+          );
+        } else {
+          console.log("create new arrival");
+          //create new driving situation
+          await createDrivingSituation(
+            {
+              ...e,
+              drivingSituation: {
+                arrival: e.drivingSituation.arrival,
+              },
+            },
+            rh?.token ?? "",
+          );
+        }
+      }
+
+      if (!!departure) {
+        if (!!currentDeparture && !!departure) {
+          console.log("alter departure");
+          //alter current driving event
+          await editDrivingSituation(
+            {
+              ...e,
+              drivingSituation: {
+                departure: e.drivingSituation.departure,
+              },
+            },
+            rh?.token ?? "",
+          );
+        } else {
+          console.log("create new departure");
+          console.log(e);
+          await createDrivingSituation(
+            {
+              ...e,
+              drivingSituation: {
+                departure: e.drivingSituation.departure,
+              },
+            },
+            rh?.token ?? "",
+          );
+        }
+      }
+    }
   }
 
   function selectNewCalendarDayOnGrid(v: CalendarDate) {
@@ -472,60 +572,7 @@ export function CalendarUI({
                   c: CalendarEvent,
                   newEventDate: CalendarDate,
                 ) => {
-                  const newEventInPeriod: Boolean =
-                    compareDates(calendarDaysInPeriod[0].date, newEventDate) <=
-                      0 &&
-                    compareDates(
-                      newEventDate,
-                      calendarDaysInPeriod[calendarDaysInPeriod.length - 1]
-                        .date,
-                    ) <= 0;
-
-                  if (newEventInPeriod) {
-                    //console.log("Need to update current period");
-                    const idx = calendarDaysInPeriod.findIndex((dip) =>
-                      datesEqual(dip, {
-                        date: newEventDate,
-                        events: [] as CalendarEvent[],
-                      } as CalendarDay),
-                    );
-                    //console.log("IDX:", idx);
-
-                    if ((calendarDaysInPeriod[idx].id ?? -1) == -1) {
-                      //console.log("need to create new calendar day");
-                      await createEvent(-1, c, rh?.token ?? "", {
-                        calendarID: calendarID,
-                        calendarDate: newEventDate,
-                      });
-                    } else {
-                      //console.log("day should already exist");
-                      await createEvent(
-                        calendarDaysInPeriod[idx].id ?? -1,
-                        c,
-                        rh?.token ?? "",
-                      );
-                    }
-                    setCalendarDaysInPeriod((prevPeriod) => {
-                      const updatedPeriod = [...prevPeriod];
-                      updatedPeriod[idx] = {
-                        ...updatedPeriod[idx],
-                        events: [...updatedPeriod[idx].events, c],
-                      };
-                      return updatedPeriod;
-                    });
-
-                    setCurrentDay({
-                      ...calendarDaysInPeriod[idx],
-                      events: [...calendarDaysInPeriod[idx].events, c],
-                    });
-                  } else {
-                    await createEvent(-1, c, rh?.token ?? "", {
-                      calendarID: calendarID,
-                      calendarDate: newEventDate,
-                    });
-                  }
-
-                  setRightSideDisplayType("DAY");
+                  await createNewEvent(c, newEventDate);
                 }}
               />
             )}

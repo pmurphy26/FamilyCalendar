@@ -88,7 +88,10 @@ export const addEvents = async (req: Request, res: Response) => {
         return;
       }
 
+      //TODO: verify contents of events are valid
+
       if (dayID == -1) {
+        /* Calendar day doesn't exist in DB, need to create one */
         if (day.calendarInfo) {
           const calendarInfo = day.calendarInfo;
           const { calendarID, calendarDate } = calendarInfo;
@@ -98,10 +101,13 @@ export const addEvents = async (req: Request, res: Response) => {
               error: `calendar info must have calendarID and calendarDate fields ${calendarInfo}`,
             });
           } else {
+            /* API call to create new calendar day */
             const newCalendarDay = await createDayWithCalendarID(
               calendarID,
               calendarDate,
             );
+
+            /* Verify creation was successful and add it to calendarEventsToAdd*/
             if (!newCalendarDay || !newCalendarDay.id) {
               throw new Error(
                 `error creating new calendar day for 
@@ -120,18 +126,23 @@ export const addEvents = async (req: Request, res: Response) => {
         calendarEventsToAdd[dayID] = events;
       }
     }
-    const addSuccessful = await addEventsToDB(calendarEventsToAdd);
+    const addedEvents: Record<number, CalendarEvent[]> =
+      await addEventsToDB(calendarEventsToAdd);
 
-    if (!addSuccessful) {
+    if (Object.keys(addedEvents).length == 0) {
       return res
         .status(404)
-        .json({ error: "unable to add all events to database" });
+        .json({ error: "unable to add events to database" });
     }
 
-    res.status(201).json({ success: true });
+    res.status(201).json({ events: addedEvents });
   } catch (err) {
-    console.error("DB ERROR:", err);
-    res.status(500).json({ error: err });
+    console.error(err);
+    if (err instanceof Error) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: err });
+    }
   }
 };
 

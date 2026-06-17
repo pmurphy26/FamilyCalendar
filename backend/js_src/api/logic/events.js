@@ -184,9 +184,12 @@ async function getEventsForDayWithID(id) {
 }
 async function addEventsToDB(events) {
     try {
-        await Promise.all(Object.entries(events).flatMap(([dayID, eventsOnDay]) => {
-            return eventsOnDay.map((event) => {
-                return db_1.controller.query(`INSERT INTO calendar_event 
+        const addedEvents = {};
+        await Promise.all(Object.entries(events).flatMap(async ([dayIDStr, eventsOnDay]) => {
+            const dayID = Number(dayIDStr);
+            const eod = [];
+            await Promise.all(eventsOnDay.map(async (event) => {
+                const res = await db_1.controller.query(`INSERT INTO calendar_event 
             (
             calendar_day_id, 
             event_title, 
@@ -200,7 +203,10 @@ async function addEventsToDB(events) {
             event_notes, 
             created_by_id
             ${event.for ? ", for_id" : ""}) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11${event.for ? ", $12" : ""});`, [
+            VALUES (
+            $1, $2, $3, $4, $5, $6, $7, 
+            $8, $9, $10, $11${event.for ? ", $12" : ""})
+            RETURNING id;`, [
                     //event.id,
                     dayID,
                     event.title,
@@ -215,9 +221,14 @@ async function addEventsToDB(events) {
                     event.createdBy.id,
                     ...(event.for ? [event.for.id] : []),
                 ]);
-            });
+                if (res.rowCount == 0) {
+                    return;
+                }
+                eod.push({ ...event, id: res.rows[0].id });
+            }));
+            addedEvents[dayID] = eod;
         }));
-        return true;
+        return addedEvents;
     }
     catch (err) {
         if (err instanceof Error) {
@@ -226,17 +237,8 @@ async function addEventsToDB(events) {
         else {
             console.error(`Unknown error while inserting events`);
         }
-        return false;
+        return {};
     }
-}
-async function deleteCommentByID(id) {
-    const result = await db_1.controller.query(`DELETE FROM public."Comments"
-    WHERE id = $1
-    RETURNING *;`, [id]);
-    if (result.rows.length === 0) {
-        return false;
-    }
-    return true;
 }
 async function updateEventInDB(event, calendarDayID) {
     try {

@@ -10,13 +10,8 @@ import type {
   Vehicle,
 } from "../../../shared/types";
 import "./CalendarEvent.css";
-import { mockFamilyIndividuals } from "../helpers/mockData";
 import { ToggleUI } from "./Calendar";
-import {
-  SelectVehicleUI,
-  VehiclePassengersUI,
-  VehicleSituationUI,
-} from "./VehicleSituation";
+import { SelectVehicleUI, VehicleSituationUI } from "./VehicleSituation";
 
 type CalendarDayEventProps = {
   event: CalendarEvent;
@@ -243,6 +238,7 @@ export function CreateCalendarEventUI({
     year: currDate.getFullYear(),
   });
   const [eventForIndex, setEventForIndex] = useState<number>(-1);
+  const [passengerToAddIndex, setPassengerToAddIndex] = useState<number>(-1);
 
   return (
     <div className="calendar-event">
@@ -392,12 +388,23 @@ export function CreateCalendarEventUI({
           </label>
         </div>
 
+        {/* Transportation */}
+        <SelectVehicleUI
+          newEvent={newEvent}
+          family={family}
+          passengerToAddIndex={passengerToAddIndex}
+          setNewEvent={setNewEvent}
+          setPassengerToAddIndex={setPassengerToAddIndex}
+        />
+
         {/* CREATE BUTTON */}
         <div
           className="save-button"
           onClick={() => {
             if (!newEvent.location) return console.log("assign location");
             if (!newEvent.title) return console.log("assign title");
+            console.log(newEvent);
+            console.log(eventDate);
             createEvent(newEvent, eventDate);
           }}
         >

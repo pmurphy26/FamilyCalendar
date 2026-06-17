@@ -137,14 +137,14 @@ export async function createDayWithCalendarID(
   newCalendarDay: CalendarDate,
 ): Promise<CalendarDay | null> {
   try {
-    const result = await controller.query(
-      `INSERT INTO calendar_day (
-        calendar_id, 
-        day_day,
-        day_month,
-        day_year
-      ) VALUES ($1, $2, $3, $4) 
-      RETURNING *;`,
+    const checkDayDoesNotExist = await controller.query(
+      `SELECT * 
+      FROM calendar_day 
+      WHERE 
+        calendar_id = $1 AND
+        day_day = $2 AND
+        day_month = $3 AND
+        day_year = $4;`,
       [
         calendarID,
         newCalendarDay.day,
@@ -153,34 +153,58 @@ export async function createDayWithCalendarID(
       ],
     );
 
-    if (result.rowCount == 0) {
-      throw new Error(
-        `Could not create calendar date ${newCalendarDay.month}/${
-          newCalendarDay.day
-        }/${newCalendarDay.year} for calendar with id ${calendarID}`,
+    if (checkDayDoesNotExist.rowCount == 0) {
+      const result = await controller.query(
+        `INSERT INTO calendar_day (
+        calendar_id, 
+        day_day,
+        day_month,
+        day_year
+      ) VALUES ($1, $2, $3, $4) 
+      RETURNING *;`,
+        [
+          calendarID,
+          newCalendarDay.day,
+          newCalendarDay.month,
+          newCalendarDay.year,
+        ],
       );
-    }
 
-    const row = result.rows[0];
-
-    const required_fields = [
-      "id",
-      "calendar_id",
-      "day_day",
-      "day_month",
-      "day_year",
-    ];
-
-    for (const r_field of required_fields) {
-      if (!(r_field in row)) {
+      if (result.rowCount == 0) {
         throw new Error(
-          `Comment doesn't contain all fields. ${row} is missing ${r_field}`,
+          `Could not create calendar date ${newCalendarDay.month}/${
+            newCalendarDay.day
+          }/${newCalendarDay.year} for calendar with id ${calendarID}`,
         );
       }
+
+      const row = result.rows[0];
+
+      const required_fields = [
+        "id",
+        "calendar_id",
+        "day_day",
+        "day_month",
+        "day_year",
+      ];
+
+      for (const r_field of required_fields) {
+        if (!(r_field in row)) {
+          throw new Error(
+            `Comment doesn't contain all fields. ${row} is missing ${r_field}`,
+          );
+        }
+      }
+
+      return {
+        id: row.id,
+        date: newCalendarDay,
+        events: [],
+      };
     }
 
     return {
-      id: row.id,
+      id: checkDayDoesNotExist.rows[0].id,
       date: newCalendarDay,
       events: [],
     };
