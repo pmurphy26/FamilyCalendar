@@ -1,7 +1,8 @@
 import { useState } from "react";
 import "./NewUser.css";
-import type { AuthState, FamilyIndividual } from "@shared/types";
+import { type AuthState, type FamilyIndividual } from "../../../shared/types";
 import {
+  createMemberWithFamilyCode,
   createMemberWithFamilyID,
   createNewFamilyAPICall,
   linkUserToIndividual,
@@ -10,13 +11,15 @@ import {
 export default function NewUserPage({
   rh,
   logout,
+  setAuth,
 }: {
   rh: AuthState;
   logout: () => void;
+  setAuth: React.Dispatch<React.SetStateAction<AuthState>>;
 }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [colorStr, setColorStr] = useState("#3498db");
+  const [colorStr, setColorStr] = useState("#000000"); //"#3498db");
   const [canDrive, setCanDrive] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(true);
 
@@ -51,7 +54,10 @@ export default function NewUserPage({
           <input
             type="checkbox"
             checked={createNewFamily}
-            onChange={() => setCreateNewFamily(!createNewFamily)}
+            onChange={() => {
+              setCreateNewFamily(!createNewFamily);
+              setCanEdit(!canEdit);
+            }}
           />
           <span>Create New Family</span>
         </div>
@@ -70,14 +76,16 @@ export default function NewUserPage({
         )}
 
         {/* Color String */}
-        <label className="form-label">Color</label>
+        <label className="form-label">User's Color</label>
 
         <div className="color-picker-wrapper">
           <input
             type="color"
             className="color-picker"
             value={colorStr}
-            onChange={(e) => setColorStr(e.target.value)}
+            onChange={(e) => {
+              setColorStr(e.target.value);
+            }}
           />
         </div>
 
@@ -105,9 +113,8 @@ export default function NewUserPage({
         <button
           className="submit-btn"
           onClick={async () => {
-            console.log("attempting to createa a new user");
             if (createNewFamily) {
-              console.log("creating new family");
+              //console.log("creating new family");
               if (!rh.user?.id) {
                 return;
               }
@@ -131,7 +138,7 @@ export default function NewUserPage({
                   name: `${firstName} ${lastName}`,
                   canDrive: canDrive,
                   canEditCalendar: canEdit,
-                  //colorStr: TODO: convert color to string
+                  colorStr: colorStr,
                 } as FamilyIndividual,
                 rh?.token ?? "",
               );
@@ -142,16 +149,72 @@ export default function NewUserPage({
               }
 
               //api call linking individual to current user
-              await linkUserToIndividual(
+              const linkSuccess = await linkUserToIndividual(
                 rh.user.id,
                 newIndividual.id,
                 rh?.token ?? "",
               );
-            } else {
-              console.log("adding individual to family");
 
-              //TODO register family individual with code
-              //TODO: api call linking individual to current user
+              if (!linkSuccess) {
+                console.log("error linking user to new individual");
+                return;
+              }
+
+              setAuth({
+                ...rh,
+                user: {
+                  ...rh.user,
+                  familyIndividualID: newIndividual.id,
+                },
+              });
+            } else {
+              //console.log("adding individual to family");
+              if (!familyCode) {
+                console.log("must have family code");
+                return;
+              }
+              if (!rh.user?.id) {
+                return;
+              }
+
+              //register family individual with code
+              const newIndividual = await createMemberWithFamilyCode(
+                familyCode,
+                {
+                  role: "CHILD",
+                  name: `${firstName} ${lastName}`,
+                  canDrive: canDrive,
+                  canEditCalendar: canEdit,
+                  colorStr: colorStr,
+                } as FamilyIndividual,
+                rh?.token ?? "",
+              );
+
+              //api call linking individual to current user
+              if (!newIndividual) {
+                console.log("error creating new individual");
+                return;
+              }
+
+              //api call linking individual to current user
+              const linkSuccess = await linkUserToIndividual(
+                rh.user.id,
+                newIndividual.id,
+                rh?.token ?? "",
+              );
+
+              if (!linkSuccess) {
+                console.log("error linking user to new individual");
+                return;
+              }
+
+              setAuth({
+                ...rh,
+                user: {
+                  ...rh.user,
+                  familyIndividualID: newIndividual.id,
+                },
+              });
             }
           }}
         >

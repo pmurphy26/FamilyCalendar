@@ -56,15 +56,9 @@ export const createFamilyIndividualWithCode = async (
   res: Response,
 ) => {
   try {
-    const individual = req.body;
+    const { code, ...individual } = req.body;
 
-    const required_fields = [
-      "role",
-      "name",
-      "canDrive",
-      "canEditCalendar",
-      "code",
-    ];
+    const required_fields = ["role", "name", "canDrive", "canEditCalendar"];
 
     for (const r_field of required_fields) {
       if (!(r_field in individual)) {
@@ -74,8 +68,14 @@ export const createFamilyIndividualWithCode = async (
       }
     }
 
+    if (!code) {
+      return res
+        .status(400)
+        .json({ error: `must include code field in request body` });
+    }
+
     const result = await createIndividualForFamilyUsingCode(
-      individual.code,
+      code,
       individual as FamilyIndividual,
     );
 

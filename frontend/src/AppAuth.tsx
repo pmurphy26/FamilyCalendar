@@ -109,6 +109,10 @@ export default function CalendarWithAuth() {
   return auth.user.familyIndividualID ? (
     <CalendarApp rh={{ token: auth.token, user: auth.user }} logout={logout} />
   ) : (
-    <NewUserPage rh={{ token: auth.token, user: auth.user }} logout={logout} />
+    <NewUserPage
+      rh={{ token: auth.token, user: auth.user }}
+      logout={logout}
+      setAuth={setAuth}
+    />
   );
 }

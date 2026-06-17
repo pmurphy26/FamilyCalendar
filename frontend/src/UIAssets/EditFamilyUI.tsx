@@ -34,6 +34,7 @@ export function EditFamilyUI({
     <div className="edit-family-container">
       <LogoutBar username={rh.user?.username ?? "Unknown"} logout={logout} />
       <EditFamilyMembersUI
+        familyIndividualID={rh.user?.familyIndividualID ?? -1}
         familyMembers={userFamily.members}
         onUpdate={async (cmb: FamilyIndividual) => {
           try {
@@ -138,11 +139,13 @@ export function LogoutBar({
 }
 
 export function EditFamilyMembersUI({
+  familyIndividualID,
   familyMembers,
   onUpdate,
   onDelete,
   onCreate,
 }: {
+  familyIndividualID: number;
   familyMembers: FamilyIndividual[];
   onUpdate: (cmb: FamilyIndividual) => void;
   onDelete: (fi: FamilyIndividual) => void;
@@ -190,6 +193,7 @@ export function EditFamilyMembersUI({
             <EditFamilyMember
               key={`fmc-${fm.id}`}
               fm={fm}
+              canChangeEdit={fm.id != familyIndividualID}
               onUpdate={function (cm: FamilyIndividual): void {
                 //console.log(cm);
                 onUpdate(cm);
@@ -227,10 +231,12 @@ export function EditFamilyMembersUI({
 
 function EditFamilyMember({
   fm,
+  canChangeEdit,
   onUpdate,
   onDelete,
 }: {
   fm: FamilyIndividual;
+  canChangeEdit: boolean;
   onUpdate: (cm: FamilyIndividual) => void;
   onDelete: (cm: FamilyIndividual) => void;
 }) {
@@ -279,15 +285,17 @@ function EditFamilyMember({
           }}
         />
       </div>
-      <div className="edit-family-member-element" style={{ width: "10%" }}>
-        <BooleanForm
-          title={`Can Edit`}
-          boolValue={currentMember.canEditCalendar}
-          onSetVal={function (b: boolean): void {
-            setCurrentMember({ ...currentMember, canEditCalendar: b });
-          }}
-        />
-      </div>
+      {canChangeEdit && (
+        <div className="edit-family-member-element" style={{ width: "10%" }}>
+          <BooleanForm
+            title={`Can Edit`}
+            boolValue={currentMember.canEditCalendar}
+            onSetVal={function (b: boolean): void {
+              setCurrentMember({ ...currentMember, canEditCalendar: b });
+            }}
+          />
+        </div>
+      )}
       <div className="edit-family-member-element" style={{ width: "20%" }}>
         <TextForm
           title={`Color`}

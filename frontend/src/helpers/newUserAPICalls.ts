@@ -64,6 +64,36 @@ export async function createMemberWithFamilyID(
 }
 
 /**
+ * API call to create a new user for a given family code
+ */
+export async function createMemberWithFamilyCode(
+  familyCode: string,
+  newIndividual: FamilyIndividual,
+  authToken: string,
+): Promise<FamilyIndividual | null> {
+  try {
+    const res = await fetch(`http://localhost:3001/api/familyIndividual/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ ...newIndividual, code: familyCode }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to get the days in the period: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    return data;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
  * API call to link user with new family individual
  */
 export async function linkUserToIndividual(

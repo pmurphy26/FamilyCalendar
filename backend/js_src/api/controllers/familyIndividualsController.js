@@ -30,20 +30,19 @@ const createFamilyIndividual = async (req, res) => {
 exports.createFamilyIndividual = createFamilyIndividual;
 const createFamilyIndividualWithCode = async (req, res) => {
     try {
-        const individual = req.body;
-        const required_fields = [
-            "role",
-            "name",
-            "canDrive",
-            "canEditCalendar",
-            "code",
-        ];
+        const { code, ...individual } = req.body;
+        const required_fields = ["role", "name", "canDrive", "canEditCalendar"];
         for (const r_field of required_fields) {
             if (!(r_field in individual)) {
                 throw new Error(`Individual doesn't contain all fields. ${individual} is missing ${r_field}`);
             }
         }
-        const result = await (0, familyIndividuals_1.createIndividualForFamilyUsingCode)(individual.code, individual);
+        if (!code) {
+            return res
+                .status(400)
+                .json({ error: `must include code field in request body` });
+        }
+        const result = await (0, familyIndividuals_1.createIndividualForFamilyUsingCode)(code, individual);
         if (!result) {
             return res.status(409).json({ error: "error inserting into databse" });
         }
