@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUser = createUser;
 exports.findUserByUsername = findUserByUsername;
 exports.findUserById = findUserById;
-// api/db/users.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const db_1 = require("../../database/db");
 // Create a new user

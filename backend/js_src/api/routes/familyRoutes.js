@@ -33,10 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importStar(require("express"));
+const express_1 = require("express");
 const familyController = __importStar(require("../controllers/familyController"));
 const router = (0, express_1.Router)();
-const jsonParser = express_1.default.json();
 router.get("/family/:id", familyController.getFamily);
 router.post("/family", familyController.createFamily);
 exports.default = router;

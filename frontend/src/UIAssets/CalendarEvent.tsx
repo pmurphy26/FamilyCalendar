@@ -5,9 +5,6 @@ import type {
   CalendarDate,
   CalendarEvent,
   Family,
-  FamilyIndividual,
-  TransportationForEvent,
-  Vehicle,
 } from "../../../shared/types";
 import "./CalendarEvent.css";
 import { ToggleUI } from "./Calendar";

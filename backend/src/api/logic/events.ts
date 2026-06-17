@@ -1,6 +1,6 @@
 import { error } from "console";
 import { controller } from "../../database/db";
-import { CalendarDate, CalendarEvent, FamilyIndividual } from "@shared/types";
+import { CalendarEvent, FamilyIndividual } from "@shared/types";
 import { getTransportationWithID } from "./transportation";
 
 export async function getEventWithID(

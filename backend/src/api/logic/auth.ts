@@ -1,4 +1,3 @@
-// api/db/users.ts
 import bcrypt from "bcrypt";
 import { controller } from "../../database/db";
 

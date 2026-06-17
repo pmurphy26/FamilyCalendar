@@ -7,7 +7,6 @@ exports.register = register;
 exports.login = login;
 exports.attachUserToIndividual = attachUserToIndividual;
 exports.me = me;
-// api/controllers/authController.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_1 = require("../logic/auth");

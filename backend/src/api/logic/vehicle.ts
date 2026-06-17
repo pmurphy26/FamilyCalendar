@@ -1,12 +1,5 @@
-import { error } from "console";
 import { controller } from "../../database/db";
-import {
-  CalendarDate,
-  CalendarEvent,
-  FamilyIndividual,
-  TransportationForEvent,
-  Vehicle,
-} from "@shared/types";
+import { Vehicle } from "@shared/types";
 
 export async function getVehicleWithID(id: number): Promise<Vehicle> {
   const result = await controller.query(`SELECT * FROM vehicle WHERE id = $1`, [

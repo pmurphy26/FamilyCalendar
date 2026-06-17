@@ -3,11 +3,9 @@ import "./Calendar.css";
 import "./Toggle.css";
 import {
   compareTimes,
-  //daysInMonthDict,
   getNextWeek,
   getWeekPeriod,
   getPrevWeek,
-  //getPrevMonth,
   monthNumToString,
   padNumberWithZeros,
   daysInMonthDict,

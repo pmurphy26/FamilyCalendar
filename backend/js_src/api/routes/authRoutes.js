@@ -33,7 +33,6 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-// api/routes/authRoutes.ts
 const express_1 = require("express");
 const authController = __importStar(require("../controllers/authController"));
 const router = (0, express_1.Router)();
