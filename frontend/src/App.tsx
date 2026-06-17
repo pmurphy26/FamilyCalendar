@@ -8,6 +8,7 @@ import type {
 } from "@shared/types";
 import {
   deleteFamilyMemberWithID,
+  getCalendarForFamilyWithID,
   getFamilyForIndividualWithID,
 } from "./helpers/apiCalls";
 import { CalendarUI } from "./UIAssets/CalendarUI";
@@ -27,6 +28,7 @@ export function CalendarApp({
   const userID: number = rh.user?.familyIndividualID ?? -1; //TODO: Create some sort of login system to make this dynamic
   const [myFamily, setMyFamily] = useState<Family>({} as Family);
   const [currentUIState, setCurrentUIState] = useState<UIState>("CALENDAR");
+  const [calendarID, setCalendarID] = useState<number>(-1);
 
   useEffect(() => {
     const fetchFamily = async () => {
@@ -34,7 +36,21 @@ export function CalendarApp({
         userID,
         rh?.token ?? "",
       );
-      setMyFamily(userFamily);
+
+      if (!!userFamily) {
+        setMyFamily(userFamily);
+
+        const userCalendar = await getCalendarForFamilyWithID(
+          userFamily.id,
+          rh?.token ?? "",
+        );
+
+        if (!!userCalendar) {
+          setCalendarID(userCalendar.calendarID);
+        }
+      } else {
+        console.log("error getting family");
+      }
     };
 
     if (userID >= 0) {
@@ -60,8 +76,8 @@ export function CalendarApp({
           setCurrentUIState(n);
         }}
       />
-      {currentUIState == "CALENDAR" && (
-        <CalendarUI calendarID={0} myFamily={myFamily} rh={rh} />
+      {currentUIState == "CALENDAR" && calendarID >= 0 && (
+        <CalendarUI calendarID={calendarID} myFamily={myFamily} rh={rh} />
       )}
       {currentUIState == "EDIT" && (
         <EditFamilyUI

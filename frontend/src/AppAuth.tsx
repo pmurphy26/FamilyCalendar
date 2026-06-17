@@ -8,6 +8,7 @@ import {
 } from "../../shared/types";
 import { CalendarApp } from "./App";
 import "./AppAuth.css";
+import NewUserPage from "./UIAssets/NewUserUI";
 
 const API_BASE = "http://localhost:3001/api";
 
@@ -105,21 +106,9 @@ export default function CalendarWithAuth() {
     );
   }
 
-  //TODO: pass logout function and attach to family editing section
-  return (
+  return auth.user.familyIndividualID ? (
     <CalendarApp rh={{ token: auth.token, user: auth.user }} logout={logout} />
+  ) : (
+    <NewUserPage rh={{ token: auth.token, user: auth.user }} logout={logout} />
   );
-  {
-    /*<div className="flex flex-col h-screen">
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <div>
-          Logged in as <b>{auth.user.username}</b>
-        </div>
-        <button className="px-3 py-1 border rounded" onClick={logout}>
-          Logout
-        </button>
-      </div>
-       Your existing component 
-    </div>*/
-  }
 }

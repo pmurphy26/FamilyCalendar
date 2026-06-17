@@ -5,11 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.register = register;
 exports.login = login;
+exports.attachUserToIndividual = attachUserToIndividual;
 exports.me = me;
 // api/controllers/authController.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_1 = require("../logic/auth");
+const familyIndividuals_1 = require("../logic/familyIndividuals");
 const JWT_SECRET = process.env.JWT_SECRET || "invalid-secret";
 // Helper to generate JWT
 function generateToken(userId) {
@@ -70,6 +72,31 @@ async function login(req, res) {
                 username: user.username,
                 familyIndividualID: user.familyIndividualID,
             },
+        });
+    }
+    catch (err) {
+        console.error("DB ERROR:", err);
+        if (err instanceof Error) {
+            res.status(500).json({ error: err?.message ?? "unknown error" });
+        }
+        else {
+            res.status(500).json({ error: "unknown error" });
+        }
+    }
+}
+async function attachUserToIndividual(req, res) {
+    try {
+        const { userID, familyIndividualID } = req.params;
+        if (!userID || !familyIndividualID)
+            return res
+                .status(400)
+                .json({ error: "Missing userID or familyIndividualID" });
+        const success = await (0, familyIndividuals_1.attachUserToFamilyIndividual)(Number(userID), Number(familyIndividualID));
+        if (!success)
+            return res.status(401).json({ error: "unable to attach" });
+        res.json({
+            userID: userID,
+            familyIndividualID: familyIndividualID,
         });
     }
     catch (err) {

@@ -3,7 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFamilyForIndividualWithID = getFamilyForIndividualWithID;
 exports.getAllFamilyVehiclesWithID = getAllFamilyVehiclesWithID;
 exports.getAllFamilyMembersWithID = getAllFamilyMembersWithID;
+exports.createNewFamily = createNewFamily;
+exports.getFamilyWithCode = getFamilyWithCode;
 const db_1 = require("../../database/db");
+const calendar_1 = require("./calendar");
 async function getFamilyForIndividualWithID(id) {
     try {
         const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE id = $1`, [id]);
@@ -87,4 +90,63 @@ async function getAllFamilyMembersWithID(id) {
         console.error(err);
         return [];
     }
+}
+async function createNewFamily() {
+    try {
+        const code = await generateUniqueFamilyCode();
+        const queryRes = await db_1.controller.query("INSERT INTO family (code) VALUES ($1) RETURNING *;", [code]);
+        if (queryRes.rowCount == 0) {
+            throw new Error("failed to create new family db error");
+        }
+        const row = queryRes.rows[0];
+        const reqFields = ["id", "code"];
+        for (const f of reqFields) {
+            if (!(f in row)) {
+                throw new Error(`Individual doesn't contain all fields. ${row} is missing ${f}`);
+            }
+        }
+        await (0, calendar_1.createCalendarWithFamilyID)(row.id);
+        return {
+            id: row.id,
+            code: row.code,
+            vehicles: [],
+            members: [],
+        };
+    }
+    catch (err) {
+        console.error(err);
+        return null;
+    }
+}
+async function generateUniqueFamilyCode() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    function generateCode() {
+        let out = "";
+        for (let i = 0; i < 12; i++) {
+            out += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return out.slice(0, 4) + "-" + out.slice(4, 8) + "-" + out.slice(8, 12);
+    }
+    while (true) {
+        const code = generateCode();
+        const result = await db_1.controller.query("SELECT 1 FROM family WHERE code = $1 LIMIT 1", [code]);
+        if (result.rowCount === 0) {
+            return code;
+        }
+    }
+}
+async function getFamilyWithCode(code) {
+    try {
+        const res = await db_1.controller.query(`SELECT * FROM family WHERE code = $1`, [
+            code,
+        ]);
+        if (res.rowCount == 0) {
+            throw new Error(`No family with code ${code} found in DB`);
+        }
+        return res.rows[0].id;
+    }
+    catch (err) {
+        console.error(err);
+    }
+    return null;
 }

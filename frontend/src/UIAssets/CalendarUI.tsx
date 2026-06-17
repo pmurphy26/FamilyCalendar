@@ -134,8 +134,6 @@ export function CalendarUI({
       rh?.token ?? "",
     );
 
-    //console.log(daysWithEvents);
-
     let allDaysInPeriod: CalendarDay[] = [];
     let currentDay: number = newStart.day;
 
@@ -496,7 +494,7 @@ export function CalendarUI({
                     if ((calendarDaysInPeriod[idx].id ?? -1) == -1) {
                       //console.log("need to create new calendar day");
                       await createEvent(-1, c, rh?.token ?? "", {
-                        calendarID: 0,
+                        calendarID: calendarID,
                         calendarDate: newEventDate,
                       });
                     } else {
@@ -522,7 +520,7 @@ export function CalendarUI({
                     });
                   } else {
                     await createEvent(-1, c, rh?.token ?? "", {
-                      calendarID: 0,
+                      calendarID: calendarID,
                       calendarDate: newEventDate,
                     });
                   }

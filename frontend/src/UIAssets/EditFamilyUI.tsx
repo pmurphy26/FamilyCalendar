@@ -10,12 +10,12 @@ import { BooleanForm, NumberForm, TextForm } from "../helpers/forms";
 import { useState } from "react";
 import {
   createFamilyVehicle,
-  createMemberWithFamilyID,
   deleteFamilyVehicleWithID,
   updateIndividual,
   updateVehicle,
 } from "../helpers/apiCalls";
 import "./logoutBar.css";
+import { createMemberWithFamilyID } from "../helpers/newUserAPICalls";
 
 export function EditFamilyUI({
   userFamily,
@@ -57,12 +57,17 @@ export function EditFamilyUI({
         }}
         onCreate={async (newIndividual: FamilyIndividual) => {
           try {
-            const res: FamilyIndividual = await createMemberWithFamilyID(
+            const res: FamilyIndividual | null = await createMemberWithFamilyID(
               userFamily.id,
               newIndividual,
               rh?.token ?? "",
             );
             //console.log("Res:", res);
+            if (!res) {
+              console.log("error creating new individual");
+              return;
+            }
+
             onUpdate({
               ...userFamily,
               members: [...userFamily.members, res],

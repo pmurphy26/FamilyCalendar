@@ -54,7 +54,7 @@ export async function getTransportationWithID(
 
     //TODO try and get passengers
     try {
-      console.log(id);
+      //console.log(id);
       const passengersForTransportation =
         await getPassengersForTransportationWithID(row.id);
       passengers = passengersForTransportation;

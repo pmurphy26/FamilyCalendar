@@ -36,7 +36,7 @@ async function getTransportationWithID(id) {
         let passengers = [];
         //TODO try and get passengers
         try {
-            console.log(id);
+            //console.log(id);
             const passengersForTransportation = await (0, passengers_1.getPassengersForTransportationWithID)(row.id);
             passengers = passengersForTransportation;
         }

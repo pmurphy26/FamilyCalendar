@@ -8,6 +8,7 @@ import {
   TransportationForEvent,
   Vehicle,
 } from "@shared/types";
+import { createCalendarWithFamilyID } from "./calendar";
 
 export async function getFamilyForIndividualWithID(
   id: number,
@@ -130,4 +131,83 @@ export async function getAllFamilyMembersWithID(
     console.error(err);
     return [];
   }
+}
+
+export async function createNewFamily(): Promise<Family | null> {
+  try {
+    const code = await generateUniqueFamilyCode();
+    const queryRes = await controller.query(
+      "INSERT INTO family (code) VALUES ($1) RETURNING *;",
+      [code],
+    );
+
+    if (queryRes.rowCount == 0) {
+      throw new Error("failed to create new family db error");
+    }
+
+    const row = queryRes.rows[0];
+    const reqFields = ["id", "code"];
+
+    for (const f of reqFields) {
+      if (!(f in row)) {
+        throw new Error(
+          `Individual doesn't contain all fields. ${row} is missing ${f}`,
+        );
+      }
+    }
+
+    await createCalendarWithFamilyID(row.id);
+
+    return {
+      id: row.id,
+      code: row.code,
+      vehicles: [],
+      members: [],
+    };
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+async function generateUniqueFamilyCode(): Promise<string> {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  function generateCode() {
+    let out = "";
+    for (let i = 0; i < 12; i++) {
+      out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return out.slice(0, 4) + "-" + out.slice(4, 8) + "-" + out.slice(8, 12);
+  }
+
+  while (true) {
+    const code = generateCode();
+
+    const result = await controller.query(
+      "SELECT 1 FROM family WHERE code = $1 LIMIT 1",
+      [code],
+    );
+
+    if (result.rowCount === 0) {
+      return code;
+    }
+  }
+}
+
+export async function getFamilyWithCode(code: string): Promise<number | null> {
+  try {
+    const res = await controller.query(`SELECT * FROM family WHERE code = $1`, [
+      code,
+    ]);
+
+    if (res.rowCount == 0) {
+      throw new Error(`No family with code ${code} found in DB`);
+    }
+
+    return res.rows[0].id;
+  } catch (err) {
+    console.error(err);
+  }
+  return null;
 }

@@ -1,4 +1,5 @@
 import type {
+  Calendar,
   CalendarDate,
   CalendarDay,
   CalendarEvent,
@@ -198,44 +199,22 @@ function filterDaysOnPeriod(
 export async function getFamilyForIndividualWithID(
   id: number,
   authToken: string,
-): Promise<Family> {
-  const res = await fetch(`http://localhost:3001/api/family/${id}`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
+): Promise<Family | null> {
+  try {
+    const res = await fetch(`http://localhost:3001/api/family/${id}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to get the days in the period: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Failed to get the days in the period: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    return data;
+  } catch (err) {
+    return null;
   }
-
-  const data = await res.json();
-
-  return data;
-}
-
-export async function createMemberWithFamilyID(
-  familyID: number,
-  newIndividual: FamilyIndividual,
-  authToken: string,
-): Promise<FamilyIndividual> {
-  const res = await fetch(
-    `http://localhost:3001/api/familyIndividual/${familyID}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: JSON.stringify(newIndividual),
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error(`Failed to get the days in the period: ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  return data;
 }
 
 export async function updateIndividual(
@@ -358,4 +337,29 @@ export async function deleteFamilyVehicleWithID(
   const data = await res.json();
 
   return data;
+}
+
+/**
+ * Get calendar for family with id
+ */
+export async function getCalendarForFamilyWithID(
+  id: number,
+  authToken: string,
+): Promise<Calendar | null> {
+  try {
+    //console.log(id);
+    const res = await fetch(`http://localhost:3001/api/calendar/family/${id}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to get the days in the period: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    return data;
+  } catch (err) {
+    return null;
+  }
 }

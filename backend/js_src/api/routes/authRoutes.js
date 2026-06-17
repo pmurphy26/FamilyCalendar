@@ -39,4 +39,5 @@ const authController = __importStar(require("../controllers/authController"));
 const router = (0, express_1.Router)();
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.put("/user/family/:userID/:familyIndividualID", authController.attachUserToIndividual);
 exports.default = router;

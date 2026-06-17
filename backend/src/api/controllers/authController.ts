@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import { createUser, findUserByUsername } from "../logic/auth";
+import { attachUserToFamilyIndividual } from "../logic/familyIndividuals";
 
 const JWT_SECRET = process.env.JWT_SECRET || "invalid-secret";
 
@@ -74,6 +75,35 @@ export async function login(req: Request, res: Response) {
         username: user.username,
         familyIndividualID: user.familyIndividualID,
       },
+    });
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    if (err instanceof Error) {
+      res.status(500).json({ error: err?.message ?? "unknown error" });
+    } else {
+      res.status(500).json({ error: "unknown error" });
+    }
+  }
+}
+
+export async function attachUserToIndividual(req: Request, res: Response) {
+  try {
+    const { userID, familyIndividualID } = req.params;
+
+    if (!userID || !familyIndividualID)
+      return res
+        .status(400)
+        .json({ error: "Missing userID or familyIndividualID" });
+
+    const success = await attachUserToFamilyIndividual(
+      Number(userID),
+      Number(familyIndividualID),
+    );
+    if (!success) return res.status(401).json({ error: "unable to attach" });
+
+    res.json({
+      userID: userID,
+      familyIndividualID: familyIndividualID,
     });
   } catch (err) {
     console.error("DB ERROR:", err);

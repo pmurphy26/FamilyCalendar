@@ -45,7 +45,8 @@ async function getDaysWithCalendarID(id) {
     try {
         const result = await db_1.controller.query(`SELECT * FROM calendar_day WHERE calendar_id = $1`, [id]);
         if (result.rowCount == 0) {
-            throw new Error(`No event found with ID ${id}`);
+            //throw new Error(`No event found with ID ${id}`);
+            return [];
         }
         const rows = result.rows;
         const required_fields = [

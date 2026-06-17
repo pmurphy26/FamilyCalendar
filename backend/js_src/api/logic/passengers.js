@@ -10,7 +10,7 @@ async function getPassengersForTransportationWithID(transportationID) {
             ON fi.id = tp.passenger_id
         WHERE transportation_id = $1;`, [transportationID]);
         if (result.rowCount == 0) {
-            console.log(`No transportation found with ID ${transportationID}`);
+            //console.log(`No transportation found with ID ${transportationID}`);
             return [];
         }
         for (const row of result.rows) {

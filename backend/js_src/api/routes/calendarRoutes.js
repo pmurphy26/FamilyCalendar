@@ -37,5 +37,6 @@ const express_1 = __importStar(require("express"));
 const calendarController = __importStar(require("../controllers/calendarController"));
 const router = (0, express_1.Router)();
 const jsonParser = express_1.default.json();
+router.get("/calendar/family/:id", calendarController.getCalendarForFamily);
 router.get("/calendar/:id", calendarController.getCalendar);
 exports.default = router;

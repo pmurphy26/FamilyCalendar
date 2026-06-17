@@ -28,6 +28,7 @@ export type Family = {
   id: number;
   members: FamilyIndividual[];
   vehicles?: Vehicle[];
+  code?: string;
 };
 
 export type CalendarDate = {

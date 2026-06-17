@@ -15,7 +15,7 @@ export async function getPassengersForTransportationWithID(
     );
 
     if (result.rowCount == 0) {
-      console.log(`No transportation found with ID ${transportationID}`);
+      //console.log(`No transportation found with ID ${transportationID}`);
       return [];
     }
 

@@ -9,6 +9,7 @@ import {
 import { createDayWithCalendarID, getCalendarDayIDByDate } from "../logic/days";
 import {
   createIndividualForFamily,
+  createIndividualForFamilyUsingCode,
   deleteIndividualWithID,
   updateIndividual,
 } from "../logic/familyIndividuals";
@@ -44,6 +45,45 @@ export const createFamilyIndividual = async (req: Request, res: Response) => {
     }
 
     res.json(result);
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    res.status(500).json({ error: err });
+  }
+};
+
+export const createFamilyIndividualWithCode = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const individual = req.body;
+
+    const required_fields = [
+      "role",
+      "name",
+      "canDrive",
+      "canEditCalendar",
+      "code",
+    ];
+
+    for (const r_field of required_fields) {
+      if (!(r_field in individual)) {
+        throw new Error(
+          `Individual doesn't contain all fields. ${individual} is missing ${r_field}`,
+        );
+      }
+    }
+
+    const result = await createIndividualForFamilyUsingCode(
+      individual.code,
+      individual as FamilyIndividual,
+    );
+
+    if (!result) {
+      return res.status(409).json({ error: "error inserting into databse" });
+    }
+
+    res.status(201).json(result);
   } catch (err) {
     console.error("DB ERROR:", err);
     res.status(500).json({ error: err });

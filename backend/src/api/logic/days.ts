@@ -59,7 +59,8 @@ export async function getDaysWithCalendarID(
     );
 
     if (result.rowCount == 0) {
-      throw new Error(`No event found with ID ${id}`);
+      //throw new Error(`No event found with ID ${id}`);
+      return [];
     }
 
     const rows = result.rows;

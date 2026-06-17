@@ -40,4 +40,5 @@ const jsonParser = express_1.default.json();
 router.post("/familyIndividual/delete/:id", familyIndividualsController.deleteFamilyIndividual);
 router.post("/familyIndividual/update", jsonParser, familyIndividualsController.updateFamilyIndividual);
 router.post("/familyIndividual/:id", jsonParser, familyIndividualsController.createFamilyIndividual);
+router.post("/familyIndividual", jsonParser, familyIndividualsController.createFamilyIndividualWithCode);
 exports.default = router;

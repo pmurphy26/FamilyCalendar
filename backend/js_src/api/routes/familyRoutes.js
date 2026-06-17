@@ -38,4 +38,5 @@ const familyController = __importStar(require("../controllers/familyController")
 const router = (0, express_1.Router)();
 const jsonParser = express_1.default.json();
 router.get("/family/:id", familyController.getFamily);
+router.post("/family", familyController.createFamily);
 exports.default = router;

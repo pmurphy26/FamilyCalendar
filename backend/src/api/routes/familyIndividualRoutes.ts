@@ -18,5 +18,10 @@ router.post(
   jsonParser,
   familyIndividualsController.createFamilyIndividual,
 );
+router.post(
+  "/familyIndividual",
+  jsonParser,
+  familyIndividualsController.createFamilyIndividualWithCode,
+);
 
 export default router;
