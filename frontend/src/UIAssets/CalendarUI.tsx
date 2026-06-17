@@ -80,6 +80,8 @@ export function CalendarUI({
       datesEqual(cd, newCurr),
     );
 
+    console.log(dayInPeriod);
+
     if (dayInPeriod.length > 0) {
       setCurrentDay(dayInPeriod[0]);
       return;
@@ -126,7 +128,29 @@ export function CalendarUI({
     newStart: CalendarDate,
     newEnd: CalendarDate,
   ): Promise<CalendarDay[]> {
-    //console.log("Getting new period:", newStart, newEnd);
+    function addBlankDays(
+      currentDay: number,
+      targetDay: number,
+    ): [number, CalendarDay[]] {
+      const allDaysInPeriod: CalendarDay[] = [];
+      while (currentDay < targetDay) {
+        const addedDay = {
+          day: currentDay,
+          month: currentDay >= newStart.day ? newStart.month : newEnd.month, //currentCalendarDay.date.month,
+          year: currentCalendarDay.date.year,
+        };
+        allDaysInPeriod.push({
+          date: addedDay,
+          events: [],
+        } as CalendarDay);
+
+        currentDay += 1;
+      }
+
+      return [currentDay, allDaysInPeriod];
+    }
+
+    console.log("Getting new period:", newStart, newEnd);
     const daysWithEvents: CalendarDay[] = await getCalendarDaysInPeriod(
       calendarID,
       newStart,
@@ -140,38 +164,51 @@ export function CalendarUI({
     //console.log(daysWithEvents.length, currentDay, newEnd, newStart > newEnd);
 
     for (const dayWithEvent of daysWithEvents) {
-      while (currentDay < dayWithEvent.date.day) {
-        allDaysInPeriod.push({
-          date: {
-            day: currentDay,
-            month: currentCalendarDay.date.month,
-            year: currentCalendarDay.date.year,
-          },
-          events: [],
-        } as CalendarDay);
+      /* Adding blank days until a dayWithEvent is reached */
+      const targetDay =
+        dayWithEvent.date.day < newStart.day &&
+        currentDay > dayWithEvent.date.day
+          ? daysInMonthDict(
+              dayWithEvent.date.month - 1,
+              dayWithEvent.date.year,
+            ) + 1 //TODO fix this for start and end of year
+          : dayWithEvent.date.day;
 
-        currentDay += 1;
+      const [newCurrentDay, newDaysInPeriod] = addBlankDays(
+        currentDay,
+        targetDay,
+      );
+      currentDay = newCurrentDay;
+      allDaysInPeriod.push(...newDaysInPeriod);
+
+      if (targetDay != dayWithEvent.date.day) {
+        currentDay = 1;
+        const [newCurrDay, newBlankDays] = addBlankDays(
+          currentDay,
+          dayWithEvent.date.day,
+        );
+        currentDay = newCurrDay;
+        allDaysInPeriod.push(...newBlankDays);
+        //console.log("New current day:", currentDay);
       }
+
+      //console.log("adding day with event");
+      //console.log(dayWithEvent);
 
       allDaysInPeriod.push(dayWithEvent);
       currentDay += 1;
     }
 
+    //console.log(allDaysInPeriod);
+    /* Fill in until end of period */
     const dim = daysInMonthDict(newStart.month, newStart.year);
+    const nextTargetDay = newEnd.day + 1 >= currentDay ? newEnd.day : dim; //TODO: edit nextTargetDay for when current day is still in previous month and new end is in next month
+    //console.log("Adding until:", currentDay, newEnd.day, nextTargetDay);
 
-    while (
-      currentDay <= (newStart.day > newEnd.day ? newEnd.day + dim : newEnd.day)
-    ) {
+    while (currentDay <= nextTargetDay) {
       const day = currentDay > dim ? currentDay - dim : currentDay;
       const month = currentDay > dim ? newEnd.month : newStart.month;
-      /*console.log(
-        newStart,
-        currentCalendarDay.date.day,
-        currentDay,
-        newEnd,
-        month,
-        currentCalendarDay.date.month,
-      );*/
+
       allDaysInPeriod.push({
         date: {
           day: day,
@@ -182,6 +219,14 @@ export function CalendarUI({
       } as CalendarDay);
 
       currentDay += 1;
+    }
+
+    if (nextTargetDay != newEnd.day) {
+      currentDay = 1;
+      const [newCurrDay, newBlankDays] = addBlankDays(currentDay, newEnd.day);
+      currentDay = newCurrDay;
+      allDaysInPeriod.push(...newBlankDays);
+      //console.log("New current day:", currentDay);
     }
 
     //console.log(allDaysInPeriod);
@@ -230,7 +275,7 @@ export function CalendarUI({
       }
     }
 
-    await createOrEditDrivingSituationInDB(e);
+    await editDrivingSituationInDB(e);
 
     return eventDayID;
   }
@@ -363,28 +408,38 @@ export function CalendarUI({
     //TODO: implement creating driving situation
     if (createdEvent?.id) {
       console.log("adding driving situation");
-      await createOrEditDrivingSituationInDB({ ...c, id: createdEvent?.id });
+      console.log(currentCalendarEvent);
+      await createDrivingSituationInDB({ ...c, id: createdEvent?.id });
     }
-    /*
-     * TODO: run get current period with the same period params
-     * that are currently in place or with the new event's date
-     */
+
     if (newEventInPeriod) {
-      /*setCalendarDaysInPeriod((prevPeriod) => {
+      const idx = calendarDaysInPeriod.findIndex((dip) =>
+        datesEqual(dip, {
+          date: newEventDate,
+          events: [],
+        }),
+      );
+
+      setCalendarDaysInPeriod((prevPeriod) => {
         const updatedPeriod = [...prevPeriod];
         updatedPeriod[idx] = {
           ...updatedPeriod[idx],
-          events: [...updatedPeriod[idx].events, c],
+          events: [
+            ...updatedPeriod[idx].events,
+            { ...c, id: createdEvent?.id ?? -1 },
+          ],
         };
         return updatedPeriod;
       });
 
       setCurrentDay({
         ...calendarDaysInPeriod[idx],
-        events: [...calendarDaysInPeriod[idx].events, c],
-      });*/
+        events: [
+          ...calendarDaysInPeriod[idx].events,
+          { ...c, id: createdEvent?.id ?? -1 },
+        ],
+      });
     }
-
     setRightSideDisplayType("DAY");
   }
 
@@ -394,9 +449,7 @@ export function CalendarUI({
    *
    * @param e calendar event that will have driving situations acted on
    */
-  async function createOrEditDrivingSituationInDB(
-    e: CalendarEvent,
-  ): Promise<void> {
+  async function editDrivingSituationInDB(e: CalendarEvent): Promise<void> {
     if (e.drivingSituation) {
       const currentArrival = currentCalendarEvent.drivingSituation?.arrival;
       const currentDeparture = currentCalendarEvent.drivingSituation?.departure;
@@ -461,6 +514,40 @@ export function CalendarUI({
             rh?.token ?? "",
           );
         }
+      }
+    }
+  }
+
+  async function createDrivingSituationInDB(e: CalendarEvent): Promise<void> {
+    if (e.drivingSituation) {
+      const { arrival, departure } = e.drivingSituation;
+      console.log(arrival);
+      console.log(departure);
+
+      if (!!arrival) {
+        console.log("create new arrival");
+        await createDrivingSituation(
+          {
+            ...e,
+            drivingSituation: {
+              arrival: e.drivingSituation.arrival,
+            },
+          },
+          rh?.token ?? "",
+        );
+      }
+
+      if (!!departure) {
+        console.log("create new departure");
+        await createDrivingSituation(
+          {
+            ...e,
+            drivingSituation: {
+              departure: e.drivingSituation.departure,
+            },
+          },
+          rh?.token ?? "",
+        );
       }
     }
   }

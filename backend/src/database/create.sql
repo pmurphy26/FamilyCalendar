@@ -30,6 +30,10 @@ CREATE TABLE calendar_day (
     day_year INTEGER NOT NULL
 );
 
+ALTER TABLE calendar_day
+ADD CONSTRAINT unique_calendar_date
+UNIQUE (calendar_id, day_day, day_month, day_year);
+
 CREATE TABLE calendar_event (
     id SERIAL PRIMARY KEY,
 
@@ -61,13 +65,13 @@ CREATE TABLE vehicle (
 
 CREATE TABLE transportation_for_event (
     id SERIAL PRIMARY KEY,
-    vehicle_id INTEGER REFERENCES vehicle(id),
-    event_id INTEGER REFERENCES calendar_event(id) NOT NULL,
+    vehicle_id INTEGER REFERENCES vehicle(id) ON DELETE CASCADE,
+    event_id INTEGER REFERENCES calendar_event(id) NOT NULL ON DELETE CASCADE,
     leave_at_hour INTEGER,
     leave_at_minute INTEGER, 
     leave_at_is_am BOOLEAN,
     is_arrival BOOLEAN NOT NULL DEFAULT FALSE,
-    driver_id INTEGER REFERENCES family_individuals(id)
+    driver_id INTEGER REFERENCES family_individuals(id) ON DELETE CASCADE
 );
 
 CREATE TABLE transportation_passengers (
