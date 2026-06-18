@@ -150,7 +150,7 @@ export function CalendarUI({
       return [currentDay, allDaysInPeriod];
     }
 
-    console.log("Getting new period:", newStart, newEnd);
+    //console.log("Getting new period:", newStart, newEnd);
     const daysWithEvents: CalendarDay[] = await getCalendarDaysInPeriod(
       calendarID,
       newStart,
