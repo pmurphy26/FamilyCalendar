@@ -65,6 +65,46 @@ export async function createEvent(
   }
 }
 
+export async function createEvents(
+  days: {
+    dayID: number;
+    events: CalendarEvent[];
+    calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
+  }[],
+  authToken: string,
+): Promise<CalendarEvent[]> {
+  //console.log("adding event to day with id:", calendarDayID);
+
+  try {
+    const reqBody = JSON.stringify({
+      days,
+    });
+    console.log(reqBody);
+    const res = await fetch("http://localhost:3001/api/events/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: reqBody,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to create event: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const events = Object.values(data.events).flat();
+    console.log(data);
+    console.log(events);
+    console.log(events[0]);
+    return events as CalendarEvent[];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+
 /**
  * Api call to edit a calendar event
  *

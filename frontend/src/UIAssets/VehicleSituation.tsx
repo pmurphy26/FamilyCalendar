@@ -8,7 +8,7 @@ import type {
   Vehicle,
 } from "../../../shared/types";
 import "./CalendarEvent.css";
-import { ToggleUI } from "./Calendar";
+import { ToggleUI } from "./CalendarHeader";
 
 /**
  * Creates a vehiclesituationui for a given CalendarEvent

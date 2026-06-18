@@ -78,6 +78,7 @@ export const addEvents = async (req: Request, res: Response) => {
       return;
     }
 
+    //key=dayID, value=events being added to day
     const calendarEventsToAdd: Record<number, CalendarEvent[]> = {};
     for (const day of days) {
       const { dayID, events } = day;

@@ -102,7 +102,7 @@ export function DateForm({
       {/* Date input */}
       <div>
         <label>
-          {title}:
+          {`${title}: `}
           <input
             type="date"
             value={dateValue}

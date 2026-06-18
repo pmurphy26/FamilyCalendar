@@ -66,6 +66,7 @@ const addEvents = async (req, res) => {
             res.status(422).json({ error: "Request body must have field 'days'" });
             return;
         }
+        //key=dayID, value=events being added to day
         const calendarEventsToAdd = {};
         for (const day of days) {
             const { dayID, events } = day;

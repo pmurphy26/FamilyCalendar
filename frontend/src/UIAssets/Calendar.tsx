@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "./Calendar.css";
 import "./Toggle.css";
 import {
@@ -157,7 +157,7 @@ export function CalendarGrid({
             } else {
               //week
               if (selectedDay && periodStart && periodEnd) {
-                const nextWeekInfo = getNextWeek(
+                const { newSelectedDay, ...nextWeekInfo } = getNextWeek(
                   periodStart,
                   selectedDay,
                   periodEnd,
@@ -168,15 +168,11 @@ export function CalendarGrid({
                     nextWeekInfo.newPeriodStart.day
                   } to ${nextWeekInfo.newPeriodEnd.month}/${
                     nextWeekInfo.newPeriodEnd.day
-                  }. Selected day is ${nextWeekInfo.selectedDay}.`,
+                  }. Selected day is ${newSelectedDay.month}/${newSelectedDay.day}.`,
                 );
                 */
 
-                onChange({
-                  day: nextWeekInfo.selectedDay,
-                  month: nextWeekInfo?.month ?? selectedDay.month,
-                  year: nextWeekInfo?.year ?? selectedDay.year,
-                });
+                onChange(newSelectedDay);
               }
             }
           }}
@@ -255,7 +251,7 @@ export function CalendarGrid({
 }
 
 /**
- * Helper element for Calendar Weekday columns
+ * UI for Calendar Weekday columns
  *
  * @param calendarDay
  * @returns
@@ -280,7 +276,7 @@ function CalendarWeekDayUI({ calendarDay }: { calendarDay: CalendarDay }) {
 }
 
 /**
- * Helper element for Calendar Weekday Events in the columns
+ * UI for Calendar Weekday Events in the columns
  *
  * @param calendarDay
  * @returns
@@ -309,106 +305,6 @@ function CalendarWeekDayColumnEventUI({
         ${padNumberWithZeros(calendarEvent.startTime.hour, 2)}:${padNumberWithZeros(calendarEvent.startTime.minute, 2)}`}</p>{" "}
         {/*${calendarEvent.time.isAM ? "AM" : "PM"}`}</p>*/}
       </div>
-    </div>
-  );
-}
-
-/**
- * UI for the calendar header bar
- *
- * @param title
- * @param togglePeriod
- * @param createNewEvent
- */
-export function CalendarHeaderBar({
-  selectedDate,
-  selectedPeriod,
-  togglePeriod,
-  createNewEvent,
-}: {
-  selectedDate: CalendarDate;
-  selectedPeriod: "MONTH" | "WEEK";
-  togglePeriod: () => void;
-  createNewEvent: () => void;
-}) {
-  const [curr, setCurr] = useState<"LEFT" | "RIGHT">(
-    selectedPeriod == "MONTH" ? "RIGHT" : "LEFT",
-  );
-  return (
-    <div className="calendar-page-header">
-      <div
-        className="calendar-event-title"
-        style={{ width: "70%", height: "100%", padding: "0px 20px" }}
-      >
-        <button className="create-btn" onClick={createNewEvent}>
-          <span className="plus">+</span>
-          Create
-        </button>
-
-        <ToggleUI
-          val1={"WEEK"}
-          val2={"MONTH"}
-          curr={curr}
-          onToggle={() => {
-            togglePeriod();
-
-            setCurr(curr == "RIGHT" ? "LEFT" : "RIGHT");
-          }}
-        />
-      </div>
-
-      <h3
-        style={{
-          borderLeft: "2px solid #4a90e2",
-          borderRight: "2px solid #4a90e2",
-          background: "#e6f0ff",
-          height: "100%",
-          margin: "0px",
-          width: "30%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          boxSizing: "border-box",
-          padding: "4px",
-        }}
-      >
-        {`${monthNumToString[selectedDate.month]} ${selectedDate.day}, ${selectedDate.year}`}
-      </h3>
-    </div>
-  );
-}
-
-export function ToggleUI({
-  val1,
-  val2,
-  curr,
-  onToggle,
-}: {
-  val1: any;
-  val2: any;
-  curr: "LEFT" | "RIGHT";
-  onToggle: () => void;
-}) {
-  const selected = curr;
-
-  return (
-    <div className="toggle-container">
-      <div className={`toggle-slider ${selected === "RIGHT" ? "right" : ""}`} />
-
-      <button
-        className={selected === "LEFT" ? "active" : ""}
-        onClick={() => onToggle()}
-      >
-        {val1}
-      </button>
-
-      <button
-        className={selected === "RIGHT" ? "active" : ""}
-        onClick={() => onToggle()}
-      >
-        {val2}
-      </button>
     </div>
   );
 }

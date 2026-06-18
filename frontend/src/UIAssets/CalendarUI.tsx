@@ -1,11 +1,13 @@
 import { useState } from "react";
 import "./CalendarUI.css";
-import { CalendarGrid, CalendarHeaderBar } from "./Calendar";
+import { CalendarGrid } from "./Calendar";
+import { CalendarHeaderBar } from "./CalendarHeader";
 import type {
   AuthState,
   CalendarDate,
   CalendarDay,
   CalendarEvent,
+  CreationPeriod,
   Family,
 } from "../../../shared/types";
 import {
@@ -13,18 +15,21 @@ import {
   datesAreEqual,
   datesEqual,
   daysInMonthDict,
+  getNextWeek,
   padNumberWithZeros,
 } from "../helpers/constants";
 import {
   CalendarDayEventUI,
   CalendarEventUI,
   CreateCalendarEventUI,
+  CreateRecurringCalendarEventUI,
   EditCalendarEventUI,
 } from "./CalendarEvent";
 import { mockEvent } from "../helpers/mockData";
 import {
   createDrivingSituation,
   createEvent,
+  createEvents,
   editDrivingSituation,
   editEvent,
   getCalendarDaysInPeriod,
@@ -65,7 +70,12 @@ export function CalendarUI({
   )}-${padNumberWithZeros(currentCalendarDay.date.day, 2)}`;
 
   const [rightSideDisplayType, setRightSideDisplayType] = useState<
-    "DAY" | "EVENT" | "CREATE" | "EDIT"
+    | "DAY"
+    | "EVENT"
+    | "CREATE_SINGLE"
+    | "CREATE_WEEKLY"
+    | "CREATE_MONTHLY"
+    | "EDIT"
   >("DAY");
 
   /**
@@ -80,7 +90,7 @@ export function CalendarUI({
       datesEqual(cd, newCurr),
     );
 
-    console.log(dayInPeriod);
+    //console.log(dayInPeriod);
 
     if (dayInPeriod.length > 0) {
       setCurrentDay(dayInPeriod[0]);
@@ -355,6 +365,126 @@ export function CalendarUI({
   }
 
   /**
+   * Creates new recurring events
+   */
+  async function createNewEventRecurring(
+    event: {
+      c: CalendarEvent;
+      newEventDate: CalendarDate;
+    },
+    period: "WEEKLY" | "MONTHLY",
+    endDate: CalendarDate,
+  ) {
+    console.log(event);
+    let currCalendarDate = { ...event.newEventDate };
+    const currCalendarPeriodStartDate = calendarDaysInPeriod[0].date;
+    const currCalendarPeriodEndDate =
+      calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date;
+
+    const idx = calendarDaysInPeriod.findIndex((cdip) =>
+      datesAreEqual(cdip.date, currCalendarDate),
+    );
+    const newEventInPeriod = idx != -1;
+
+    if (!newEventInPeriod) {
+      console.log("start date not in current period");
+    } else {
+      console.log("start date in period");
+      let currPeriodStart = { ...currCalendarPeriodStartDate };
+      let currPeriodEnd = {
+        ...currCalendarPeriodEndDate,
+      };
+
+      if (!currPeriodStart) {
+        console.log("something got fucked up");
+        return;
+      }
+      if (!currPeriodEnd) {
+        console.log("something got fucked up");
+        return;
+      }
+
+      const daysWithEvents: {
+        dayID: number;
+        events: CalendarEvent[];
+        calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
+      }[] = [];
+      console.log(currPeriodStart, currPeriodEnd, currCalendarDate);
+      console.log(calendarDaysInPeriod[idx]);
+      if (period == "WEEKLY") {
+        while (compareDates(currCalendarDate, endDate) <= 0) {
+          if (daysWithEvents.length == 0 && calendarDaysInPeriod[idx].id) {
+            console.log("adding day in period");
+            daysWithEvents.push({
+              dayID: calendarDaysInPeriod[idx].id,
+              events: [event.c],
+            });
+          } else {
+            daysWithEvents.push({
+              dayID: -1,
+              events: [event.c],
+              calendarInfo: {
+                calendarID: calendarID,
+                calendarDate: currCalendarDate,
+              },
+            });
+          }
+
+          const { newPeriodStart, newSelectedDay, newPeriodEnd } = getNextWeek(
+            currPeriodStart,
+            currCalendarDate,
+            currPeriodEnd,
+          );
+
+          console.log(newPeriodStart, newPeriodEnd, newSelectedDay);
+          currPeriodStart = { ...newPeriodStart };
+          currCalendarDate = { ...newSelectedDay };
+          currPeriodEnd = { ...newPeriodEnd };
+        }
+
+        console.log(daysWithEvents);
+
+        if (daysWithEvents.length > 0) {
+          const createdEvents = await createEvents(
+            daysWithEvents,
+            rh?.token ?? "",
+          );
+          console.log(createdEvents);
+
+          const drivingSituations = await Promise.all(
+            createdEvents.map((ce) =>
+              createDrivingSituation(ce, rh?.token ?? ""),
+            ),
+          );
+
+          console.log(daysWithEvents.length, drivingSituations.length);
+
+          if (newEventInPeriod) {
+            setCalendarDaysInPeriod((prevPeriod) => {
+              const updatedPeriod = [...prevPeriod];
+              updatedPeriod[idx] = {
+                ...updatedPeriod[idx],
+                events: [...updatedPeriod[idx].events, { ...createdEvents[0] }],
+              };
+              return updatedPeriod;
+            });
+
+            setCurrentDay({
+              ...calendarDaysInPeriod[idx],
+              events: [
+                ...calendarDaysInPeriod[idx].events,
+                { ...createdEvents[0] },
+              ],
+            });
+          }
+        }
+      }
+      setRightSideDisplayType("DAY");
+      //getNewPeriod(currCalendarPeriodStartDate, currCalendarPeriodEndDate);
+    }
+  }
+
+  /**
    * Creates the given event with the given date
    *
    * @param c
@@ -405,7 +535,6 @@ export function CalendarUI({
 
     console.log(createdEvent);
 
-    //TODO: implement creating driving situation
     if (createdEvent?.id) {
       console.log("adding driving situation");
       console.log(currentCalendarEvent);
@@ -571,8 +700,14 @@ export function CalendarUI({
       <CalendarHeaderBar
         selectedDate={currentCalendarDay.date}
         selectedPeriod={period}
-        createNewEvent={() => {
-          setRightSideDisplayType("CREATE");
+        createNewEvent={(t: CreationPeriod) => {
+          if (t == "SINGLE") {
+            setRightSideDisplayType("CREATE_SINGLE");
+          } else if (t == "WEEKLY") {
+            setRightSideDisplayType("CREATE_WEEKLY");
+          } else {
+            setRightSideDisplayType("CREATE_MONTHLY");
+          }
         }}
         togglePeriod={async () => {
           //console.log("Chaning period type");
@@ -648,7 +783,7 @@ export function CalendarUI({
               />
             )}
             {/* Create new event */}
-            {rightSideDisplayType == "CREATE" && (
+            {rightSideDisplayType == "CREATE_SINGLE" && (
               <CreateCalendarEventUI
                 family={myFamily}
                 familyIndividualID={rh.user?.familyIndividualID ?? -1}
@@ -660,6 +795,31 @@ export function CalendarUI({
                   newEventDate: CalendarDate,
                 ) => {
                   await createNewEvent(c, newEventDate);
+                }}
+              />
+            )}
+            {/* Create recurring events */}
+            {(rightSideDisplayType == "CREATE_WEEKLY" ||
+              rightSideDisplayType == "CREATE_MONTHLY") && (
+              <CreateRecurringCalendarEventUI
+                family={myFamily}
+                familyIndividualID={rh.user?.familyIndividualID ?? -1}
+                period={
+                  rightSideDisplayType == "CREATE_WEEKLY" ? "WEEKLY" : "MONTHLY"
+                }
+                openEvent={() => {
+                  setRightSideDisplayType("DAY");
+                }}
+                createEvent={async (
+                  event: {
+                    c: CalendarEvent;
+                    newEventDate: CalendarDate;
+                  },
+                  period,
+                  endDate,
+                ) => {
+                  console.log("need to implement creating new events");
+                  await createNewEventRecurring(event, period, endDate);
                 }}
               />
             )}

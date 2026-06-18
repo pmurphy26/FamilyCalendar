@@ -108,3 +108,5 @@ export function saveAuthState(state: AuthState) {
 export function clearAuthState() {
   localStorage.removeItem(STORAGE_KEY);
 }
+
+export type CreationPeriod = "SINGLE" | "WEEKLY" | "MONTHLY";

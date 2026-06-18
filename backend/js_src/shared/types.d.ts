@@ -71,3 +71,4 @@ export type AuthState = {
 export declare function loadAuthState(): AuthState;
 export declare function saveAuthState(state: AuthState): void;
 export declare function clearAuthState(): void;
+export type CreationPeriod = "SINGLE" | "WEEKLY" | "MONTHLY";

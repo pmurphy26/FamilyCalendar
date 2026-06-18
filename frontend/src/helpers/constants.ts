@@ -120,61 +120,46 @@ export function getWeekPeriod(
   };
 }
 
+function addWeek(selectedDay: CalendarDate, daysInMonth: number): CalendarDate {
+  const nsd = selectedDay.day + 7;
+  const nsdInNextMonth = nsd > daysInMonth;
+
+  const nsDay = nsdInNextMonth ? nsd - daysInMonth : nsd;
+  const nsMonth = nsdInNextMonth
+    ? selectedDay.month == 12
+      ? 1
+      : selectedDay.month + 1
+    : selectedDay.month;
+  const nsYear = nsdInNextMonth
+    ? selectedDay.month == 12
+      ? selectedDay.year + 1
+      : selectedDay.year
+    : selectedDay.year;
+
+  const newSelectedDay = { day: nsDay, month: nsMonth, year: nsYear };
+
+  return newSelectedDay;
+}
+
 export function getNextWeek(
   periodStart: CalendarDate,
   selectedDay: CalendarDate,
   periodEnd: CalendarDate,
 ): {
   newPeriodStart: CalendarDate;
-  selectedDay: number;
+  newSelectedDay: CalendarDate;
   newPeriodEnd: CalendarDate;
-  month?: number;
-  year?: number;
 } {
-  const daysInMonth = daysInMonthDict(selectedDay.month, selectedDay.year);
+  const daysInMonth = daysInMonthDict(periodStart.month, periodStart.year);
+
+  const newSelectedDay = addWeek(selectedDay, daysInMonth);
+  const newPeriodStart = addWeek(periodStart, daysInMonth);
+  const newPeriodEnd = addWeek(periodEnd, daysInMonth);
 
   return {
-    newPeriodStart: {
-      day:
-        periodStart.month == selectedDay.month
-          ? periodStart.day + 7 <= daysInMonth
-            ? periodStart.day + 7
-            : periodStart.day + 7 - daysInMonth
-          : //period start is in different month from selected day
-            periodStart.day +
-            7 -
-            daysInMonthDict(periodStart.month - 1, periodStart.year),
-      month:
-        periodStart.month != selectedDay.month //period start is in same month as selected day
-          ? periodStart.day + 7 <= daysInMonth
-            ? periodStart.month
-            : periodStart.month + 1
-          : //period start is in different month from selected day
-            periodStart.month + 1,
-      year: 2026,
-    } as CalendarDate,
-    newPeriodEnd: {
-      day:
-        periodEnd.month != selectedDay.month //period end is in same month as selected day
-          ? periodEnd.day + 7 <= daysInMonth
-            ? periodEnd.day + 7
-            : periodEnd.day + 7 - daysInMonth
-          : //period start is in different month from selected day
-            periodEnd.day + 7,
-      month:
-        periodEnd.month != selectedDay.month //period end is in same month as selected day
-          ? periodEnd.day + 7 <= daysInMonth
-            ? periodEnd.month
-            : periodEnd.month + 1
-          : //period start is in different month from selected day
-            periodEnd.month,
-      year: 2026,
-    } as CalendarDate,
-    selectedDay:
-      selectedDay.day + 7 > daysInMonth
-        ? selectedDay.day + 7 - daysInMonth
-        : selectedDay.day + 7,
-    ...(selectedDay.day + 7 > daysInMonth && { month: periodStart.month + 1 }),
+    newPeriodStart,
+    newSelectedDay,
+    newPeriodEnd,
   };
 }
 
