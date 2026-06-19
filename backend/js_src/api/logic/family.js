@@ -9,12 +9,16 @@ const db_1 = require("../../database/db");
 const calendar_1 = require("./calendar");
 async function getFamilyForIndividualWithID(id) {
     try {
-        const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE id = $1`, [id]);
+        const result = await db_1.controller.query(`SELECT fi.family_id, f.code FROM 
+      family_individuals AS fi
+      JOIN family AS f
+        ON fi.family_id = f.id
+      WHERE fi.id = $1`, [id]);
         if (result.rowCount == 0) {
             throw new Error(`No individual found with ID ${id}`);
         }
         const row = result.rows[0];
-        const required_fields = ["family_id"];
+        const required_fields = ["family_id", "code"];
         for (const r_field of required_fields) {
             if (!(r_field in row)) {
                 throw new Error(`Family individual doesn't contain all fields. ${row} is missing ${r_field}`);
@@ -23,6 +27,7 @@ async function getFamilyForIndividualWithID(id) {
         const familyVehicles = await getAllFamilyVehiclesWithID(row.family_id);
         return {
             id: row.family_id,
+            code: row.code,
             members: await getAllFamilyMembersWithID(row.family_id),
             ...(familyVehicles.length && { vehicles: familyVehicles }),
         };

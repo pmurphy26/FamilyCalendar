@@ -32,7 +32,11 @@ export function EditFamilyUI({
 }) {
   return (
     <div className="edit-family-container">
-      <LogoutBar username={rh.user?.username ?? "Unknown"} logout={logout} />
+      <LogoutBar
+        familyCode={userFamily?.code ?? "Error getting code"}
+        username={rh.user?.username ?? "Unknown"}
+        logout={logout}
+      />
       <EditFamilyMembersUI
         familyIndividualID={rh.user?.familyIndividualID ?? -1}
         familyMembers={userFamily.members}
@@ -120,20 +124,34 @@ export function EditFamilyUI({
 }
 
 export function LogoutBar({
+  familyCode,
   username,
   logout,
 }: {
+  familyCode: string;
   username: string;
   logout: () => void;
 }) {
   return (
     <div className="logout-bar">
-      <div className="logout-user">
-        Logged in as <b>{username}</b>
+      <div className="family-code-container">
+        <span className="family-code-text">{familyCode}</span>
+        <button
+          className="family-code-copy-btn"
+          onClick={() => navigator.clipboard.writeText(familyCode)}
+        >
+          Copy
+        </button>
       </div>
-      <button className="logout-button" onClick={logout}>
-        Logout
-      </button>
+
+      <div className="logout-right">
+        <div className="logout-user">
+          Logged in as <b>{username}</b>
+        </div>
+        <button className="logout-button" onClick={logout}>
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
@@ -158,7 +176,8 @@ export function EditFamilyMembersUI({
         className="edit-family-member-button-container"
         style={{ width: "100%", padding: "10px 4px" }}
       >
-        <h3>{`Family Members`}</h3>
+        <h3 style={{ margin: 0 }}>{`Family Members`}</h3>
+
         {!creatingNewMember && (
           <div
             className="edit-family-member-button-container"
@@ -285,8 +304,9 @@ function EditFamilyMember({
           }}
         />
       </div>
-      {canChangeEdit && (
-        <div className="edit-family-member-element" style={{ width: "10%" }}>
+
+      <div className="edit-family-member-element" style={{ width: "10%" }}>
+        {canChangeEdit ? (
           <BooleanForm
             title={`Can Edit`}
             boolValue={currentMember.canEditCalendar}
@@ -294,8 +314,10 @@ function EditFamilyMember({
               setCurrentMember({ ...currentMember, canEditCalendar: b });
             }}
           />
-        </div>
-      )}
+        ) : (
+          <div style={{ height: "100%" }}></div> // blank placeholder
+        )}
+      </div>
       <div className="edit-family-member-element" style={{ width: "20%" }}>
         <TextForm
           title={`Color`}

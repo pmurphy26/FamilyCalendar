@@ -8,7 +8,11 @@ export async function getFamilyForIndividualWithID(
 ): Promise<Family | null> {
   try {
     const result = await controller.query(
-      `SELECT * FROM family_individuals WHERE id = $1`,
+      `SELECT fi.family_id, f.code FROM 
+      family_individuals AS fi
+      JOIN family AS f
+        ON fi.family_id = f.id
+      WHERE fi.id = $1`,
       [id],
     );
 
@@ -18,7 +22,7 @@ export async function getFamilyForIndividualWithID(
 
     const row = result.rows[0];
 
-    const required_fields = ["family_id"];
+    const required_fields = ["family_id", "code"];
 
     for (const r_field of required_fields) {
       if (!(r_field in row)) {
@@ -31,6 +35,7 @@ export async function getFamilyForIndividualWithID(
     const familyVehicles = await getAllFamilyVehiclesWithID(row.family_id);
     return {
       id: row.family_id,
+      code: row.code,
       members: await getAllFamilyMembersWithID(row.family_id),
       ...(familyVehicles.length && { vehicles: familyVehicles }),
     };

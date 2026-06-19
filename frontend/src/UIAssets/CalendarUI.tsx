@@ -489,7 +489,7 @@ export function CalendarUI({
     }
 
     if (period == "MONTHLY") {
-      console.log("implementing for monthly period");
+      //console.log("implementing for monthly period");
       const daysWithEvents: {
         dayID: number;
         events: CalendarEvent[];
@@ -526,12 +526,11 @@ export function CalendarUI({
         };
       }
 
-      console.log(daysWithEvents);
+      //console.log(daysWithEvents);
       await addDaysWithEventsToDB(daysWithEvents);
     } else if (!newEventInPeriod) {
-      console.log("start date not in current period");
+      //console.log("start date not in current period");
 
-      //const
       const firstDay = new Date(
         event.newEventDate.year,
         event.newEventDate.month - 1,
@@ -553,13 +552,13 @@ export function CalendarUI({
         endDate,
         event.c,
       );
-      console.log(daysWithEvents);
+      //console.log(daysWithEvents);
 
       await addDaysWithEventsToDB(daysWithEvents);
     } else {
       //console.log("start date in current calendar period");
-      console.log(currPeriodStart, currPeriodEnd, currCalendarDate);
-      console.log(calendarDaysInPeriod[idx]);
+      //console.log(currPeriodStart, currPeriodEnd, currCalendarDate);
+      //console.log(calendarDaysInPeriod[idx]);
 
       const daysWithEvents = populateDaysWithEventsWeekly(
         currPeriodStart,
@@ -570,36 +569,12 @@ export function CalendarUI({
         idx,
       );
 
-      console.log(daysWithEvents);
+      //console.log(daysWithEvents);
 
       await addDaysWithEventsToDB(daysWithEvents);
-
-      /* Update UI if needed 
-          if (newEventInPeriod) {
-            setCalendarDaysInPeriod((prevPeriod) => {
-              const updatedPeriod = [...prevPeriod];
-              updatedPeriod[idx] = {
-                ...updatedPeriod[idx],
-                events: [...updatedPeriod[idx].events, { ...createdEvents[0] }],
-              };
-              return updatedPeriod;
-            });
-
-            setCurrentDay({
-              ...calendarDaysInPeriod[idx],
-              events: [
-                ...calendarDaysInPeriod[idx].events,
-                { ...createdEvents[0] },
-              ],
-            });
-          }*/
     }
 
-    const np = await getNewPeriod(
-      currCalendarPeriodStartDate,
-      currCalendarPeriodEndDate,
-    );
-    setCalendarDaysInPeriod(np);
+    await reloadCurrentPeriod();
     setRightSideDisplayType("DAY");
   }
 
@@ -800,6 +775,9 @@ export function CalendarUI({
     }
   }
 
+  /**
+   * Helper functions for grid UI
+   */
   function selectNewCalendarDayOnGrid(v: CalendarDate) {
     console.log(`Selected ${v.month}/${v.day}/${v.year} as new date`);
 
@@ -809,6 +787,22 @@ export function CalendarUI({
       events: [],
     });
     setRightSideDisplayType("DAY");
+  }
+
+  async function reloadCurrentPeriod() {
+    if (
+      (period == "WEEK" && calendarDaysInPeriod.length == 7) ||
+      period == "MONTH"
+    ) {
+      const currCalendarPeriodStartDate = calendarDaysInPeriod[0].date;
+      const currCalendarPeriodEndDate =
+        calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date;
+      const np = await getNewPeriod(
+        currCalendarPeriodStartDate,
+        currCalendarPeriodEndDate,
+      );
+      setCalendarDaysInPeriod(np);
+    }
   }
 
   /**
@@ -937,7 +931,6 @@ export function CalendarUI({
                   period,
                   endDate,
                 ) => {
-                  console.log("need to implement creating new events");
                   await createNewEventRecurring(event, period, endDate);
                 }}
               />

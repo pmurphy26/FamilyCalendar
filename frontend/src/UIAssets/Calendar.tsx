@@ -237,8 +237,6 @@ export function CalendarGrid({
           })}
         </div>
       )}
-      {/*      <p>{`${currentDate.getDate()}, ${currentDate.getMonth()}, ${currentDate.getFullYear()}`}</p>
-      <p>{`${selectedDay.day}, ${selectedDay.month}, ${selectedDay.year}`}</p>*/}
     </div>
   );
 }

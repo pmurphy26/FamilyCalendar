@@ -1,11 +1,19 @@
 .logout-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between; 
   padding: 8px 16px;
   border-bottom: 1px solid #ccc;
   background-color: #fafafa;
 }
+
+
+.logout-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 
 .logout-user {
   font-size: 0.95rem;
@@ -28,4 +36,35 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+
+.family-code-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.family-code-text {
+  font-size: 14px;
+  font-weight: 600;
+  background: #f1f3f4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.family-code-copy-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
+.family-code-copy-btn:hover {
+  background: #3a78c0;
 }

@@ -455,8 +455,8 @@ export function CreateRecurringCalendarEventUI({
           onClick={() => {
             if (!newEvent.location) return console.log("assign location");
             if (!newEvent.title) return console.log("assign title");
-            console.log(newEvent);
-            console.log(eventDate);
+            //console.log(newEvent);
+            //console.log(eventDate);
             createEvent(
               { c: newEvent, newEventDate: eventDate },
               period,

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { act, useEffect, useState } from "react";
 import { BooleanForm, NumberForm } from "../helpers/forms";
 import type {
   CalendarEvent,
+  CalendarTime,
   Family,
   FamilyIndividual,
   TransportationForEvent,
@@ -9,6 +10,7 @@ import type {
 } from "../../../shared/types";
 import "./CalendarEvent.css";
 import { ToggleUI } from "./CalendarHeader";
+import { padNumberWithZeros } from "../helpers/constants";
 
 /**
  * Creates a vehiclesituationui for a given CalendarEvent
@@ -55,9 +57,10 @@ export function VehicleSituationUI({ tfe }: { tfe: TransportationForEvent }) {
 
       {tfe.leaveAt && (
         <div className="calendar-event-attributes">
-          {`Leaves at ${tfe.leaveAt.hour}:${
-            tfe.leaveAt.minute
-          } ${tfe.leaveAt.isAM ? "AM" : "PM"}`}
+          {`Leaves at ${tfe.leaveAt.hour}:${padNumberWithZeros(
+            tfe.leaveAt.minute,
+            2,
+          )} ${tfe.leaveAt.isAM ? "AM" : "PM"}`}
         </div>
       )}
     </div>
@@ -132,6 +135,19 @@ export function SelectVehicleUI({
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const activeKey = curr == "LEFT" ? "departure" : "arrival";
 
+  const [includeLeaveAt, setIncludeLeaveAt] = useState<boolean>(
+    !!newEvent.drivingSituation?.[activeKey]?.leaveAt,
+  );
+  const [leaveAtTime, setLeaveAtTime] = useState<CalendarTime>({
+    hour: newEvent.drivingSituation?.[activeKey]?.leaveAt?.hour ?? 12,
+    minute: newEvent.drivingSituation?.[activeKey]?.leaveAt?.minute ?? 0,
+    isAM: newEvent.drivingSituation?.[activeKey]?.leaveAt?.isAM ?? false,
+  });
+
+  useEffect(() => {
+    console.log(activeKey);
+  }, [activeKey]);
+
   return (
     <div className="calendar-event-edit-drive-situation">
       <div className="vehicle-header">
@@ -151,8 +167,8 @@ export function SelectVehicleUI({
       {!collapsed && (
         <>
           <ToggleUI
-            val1={"departure"}
-            val2={"arrival"}
+            val1={"Dropoff"}
+            val2={"Pickup"}
             curr={curr}
             onToggle={() => {
               setCurr(curr == "RIGHT" ? "LEFT" : "RIGHT");
@@ -376,89 +392,90 @@ export function SelectVehicleUI({
               </div>
               {/* Leaves at */}
               <div className="calendar-event-title">
-                <NumberForm
-                  title={"Leave At"}
-                  numberValue={
-                    newEvent.drivingSituation?.[activeKey]?.leaveAt?.hour ?? 0
-                  }
-                  onSetVal={(n: number) => {
-                    setNewEvent({
-                      ...newEvent,
-                      drivingSituation: {
-                        ...newEvent.drivingSituation,
-                        [activeKey]: {
-                          ...(newEvent.drivingSituation
-                            ?.arrival as TransportationForEvent),
-                          leaveAt: {
-                            hour: n,
-                            minute:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.minute ?? 0,
-                            isAM:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.isAM ?? false,
-                          },
-                        },
-                      },
-                    });
-                  }}
-                />
-                <NumberForm
-                  title={" "}
-                  numberValue={
-                    newEvent.drivingSituation?.[activeKey]?.leaveAt?.minute ?? 0
-                  }
-                  onSetVal={function (n: number): void {
-                    setNewEvent({
-                      ...newEvent,
-                      drivingSituation: {
-                        ...newEvent.drivingSituation,
-                        [activeKey]: {
-                          ...(newEvent.drivingSituation
-                            ?.arrival as TransportationForEvent),
-                          leaveAt: {
-                            hour:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.hour ?? 0,
-                            minute: n,
-                            isAM:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.isAM ?? false,
-                          },
-                        },
-                      },
-                    });
-                  }}
-                />
                 <BooleanForm
-                  title={"AM"}
-                  boolValue={
-                    newEvent.drivingSituation?.[activeKey]?.leaveAt?.isAM ??
-                    false
-                  }
+                  title={"Include leave at time"}
+                  boolValue={includeLeaveAt}
                   onSetVal={(b: boolean) => {
-                    setNewEvent({
-                      ...newEvent,
-                      drivingSituation: {
-                        ...newEvent.drivingSituation,
-                        [activeKey]: {
-                          ...(newEvent.drivingSituation
-                            ?.arrival as TransportationForEvent),
-                          leaveAt: {
-                            hour:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.hour ?? 0,
-                            minute:
-                              newEvent.drivingSituation?.[activeKey]?.leaveAt
-                                ?.minute ?? 0,
-                            isAM: b,
-                          },
-                        },
-                      },
-                    });
+                    setIncludeLeaveAt(b);
                   }}
                 />
               </div>
+              {includeLeaveAt && (
+                <div className="calendar-event-section">
+                  <div className="section-label">Leave at Time</div>
+                  <div className="time-row">
+                    <NumberForm
+                      title="Hour"
+                      numberValue={leaveAtTime.hour}
+                      onSetVal={(n) => {
+                        setLeaveAtTime({
+                          ...leaveAtTime,
+                          hour: n,
+                        });
+                        setNewEvent({
+                          ...newEvent,
+                          drivingSituation: {
+                            ...newEvent.drivingSituation,
+                            [activeKey]: {
+                              ...newEvent.drivingSituation?.[activeKey],
+                              leaveAt: {
+                                ...{
+                                  ...leaveAtTime,
+                                  hour: n,
+                                },
+                              },
+                            },
+                          },
+                        });
+                      }}
+                    />
+                    <NumberForm
+                      title="Min"
+                      numberValue={leaveAtTime.minute}
+                      onSetVal={(n) => {
+                        setLeaveAtTime({ ...leaveAtTime, minute: n });
+                        setNewEvent({
+                          ...newEvent,
+                          drivingSituation: {
+                            ...newEvent.drivingSituation,
+                            [activeKey]: {
+                              ...newEvent.drivingSituation?.[activeKey],
+                              leaveAt: {
+                                ...{
+                                  ...leaveAtTime,
+                                  minute: n,
+                                },
+                              },
+                            },
+                          },
+                        });
+                      }}
+                    />
+                    <BooleanForm
+                      title="AM"
+                      boolValue={leaveAtTime.isAM}
+                      onSetVal={(b) => {
+                        setLeaveAtTime({ ...leaveAtTime, isAM: b });
+                        setNewEvent({
+                          ...newEvent,
+                          drivingSituation: {
+                            ...newEvent.drivingSituation,
+                            [activeKey]: {
+                              ...newEvent.drivingSituation?.[activeKey],
+                              leaveAt: {
+                                ...{
+                                  ...leaveAtTime,
+                                  isAM: b,
+                                },
+                              },
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
