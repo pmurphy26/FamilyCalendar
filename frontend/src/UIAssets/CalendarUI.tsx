@@ -16,6 +16,7 @@ import {
   datesEqual,
   daysInMonthDict,
   getNextWeek,
+  getWeekPeriod,
   padNumberWithZeros,
 } from "../helpers/constants";
 import {
@@ -233,7 +234,10 @@ export function CalendarUI({
 
     if (nextTargetDay != newEnd.day) {
       currentDay = 1;
-      const [newCurrDay, newBlankDays] = addBlankDays(currentDay, newEnd.day);
+      const [newCurrDay, newBlankDays] = addBlankDays(
+        currentDay,
+        newEnd.day + 1,
+      );
       currentDay = newCurrDay;
       allDaysInPeriod.push(...newBlankDays);
       //console.log("New current day:", currentDay);
@@ -364,101 +368,168 @@ export function CalendarUI({
     setRightSideDisplayType("EVENT");
   }
 
+  function populateDaysWithEventsWeekly(
+    currPeriodStart: CalendarDate,
+    currCalendarDate: CalendarDate,
+    currPeriodEnd: CalendarDate,
+    endDate: CalendarDate,
+    c: CalendarEvent,
+    idx?: number,
+  ): {
+    dayID: number;
+    events: CalendarEvent[];
+    calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
+  }[] {
+    const daysWithEvents: {
+      dayID: number;
+      events: CalendarEvent[];
+      calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
+    }[] = [];
+
+    while (compareDates(currCalendarDate, endDate) <= 0) {
+      if (daysWithEvents.length == 0 && idx && calendarDaysInPeriod[idx].id) {
+        console.log("adding day in period");
+        daysWithEvents.push({
+          dayID: calendarDaysInPeriod[idx].id,
+          events: [c],
+        });
+      } else {
+        daysWithEvents.push({
+          dayID: -1,
+          events: [c],
+          calendarInfo: {
+            calendarID: calendarID,
+            calendarDate: currCalendarDate,
+          },
+        });
+      }
+
+      const { newPeriodStart, newSelectedDay, newPeriodEnd } = getNextWeek(
+        currPeriodStart,
+        currCalendarDate,
+        currPeriodEnd,
+      );
+
+      console.log(newPeriodStart, newPeriodEnd, newSelectedDay);
+      currPeriodStart = { ...newPeriodStart };
+      currCalendarDate = { ...newSelectedDay };
+      currPeriodEnd = { ...newPeriodEnd };
+    }
+
+    return daysWithEvents;
+  }
+
+  async function addDaysWithEventsToDB(
+    daysWithEvents: {
+      dayID: number;
+      events: CalendarEvent[];
+      calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
+    }[],
+  ) {
+    if (daysWithEvents.length > 0) {
+      const createdEvents = await createEvents(daysWithEvents, rh?.token ?? "");
+      console.log(createdEvents);
+
+      const drivingSituations = await Promise.all(
+        createdEvents.map((ce) => createDrivingSituation(ce, rh?.token ?? "")),
+      );
+
+      console.log(daysWithEvents.length, drivingSituations.length);
+    }
+  }
+
   /**
-   * Creates new recurring events
+   * Creates recurring events
+   *
+   * @param event {event, startDate, lastOfMonth?} obj giving needed info about event
+   * @param period period of reccurence
+   * @param endDate date to end recurrence
+   * @returns
    */
   async function createNewEventRecurring(
     event: {
       c: CalendarEvent;
       newEventDate: CalendarDate;
+      lastOfMonth?: boolean;
     },
     period: "WEEKLY" | "MONTHLY",
     endDate: CalendarDate,
   ) {
-    console.log(event);
+    //console.log(event);
     let currCalendarDate = { ...event.newEventDate };
     const currCalendarPeriodStartDate = calendarDaysInPeriod[0].date;
     const currCalendarPeriodEndDate =
       calendarDaysInPeriod[calendarDaysInPeriod.length - 1].date;
-
     const idx = calendarDaysInPeriod.findIndex((cdip) =>
       datesAreEqual(cdip.date, currCalendarDate),
     );
     const newEventInPeriod = idx != -1;
+    let currPeriodStart = { ...currCalendarPeriodStartDate };
+    let currPeriodEnd = {
+      ...currCalendarPeriodEndDate,
+    };
+
+    if (!currPeriodStart) {
+      console.log("something got fucked up");
+      return;
+    }
+    if (!currPeriodEnd) {
+      console.log("something got fucked up");
+      return;
+    }
 
     if (!newEventInPeriod) {
       console.log("start date not in current period");
+
+      if (period == "WEEKLY") {
+        //const
+        const firstDay = new Date(
+          event.newEventDate.year,
+          event.newEventDate.month - 1,
+          1,
+        ).getDay(); //0-6, day of week first day of month is on
+
+        const { periodStart, periodEnd } = getWeekPeriod(
+          firstDay,
+          event.newEventDate,
+        );
+
+        currPeriodStart = periodStart;
+        currPeriodEnd = periodEnd;
+
+        const daysWithEvents = populateDaysWithEventsWeekly(
+          currPeriodStart,
+          currCalendarDate,
+          currPeriodEnd,
+          endDate,
+          event.c,
+        );
+        console.log(daysWithEvents);
+
+        await addDaysWithEventsToDB(daysWithEvents);
+      } else {
+        console.log(`need to implement monthly stuff when outside of period`);
+      }
     } else {
-      console.log("start date in period");
-      let currPeriodStart = { ...currCalendarPeriodStartDate };
-      let currPeriodEnd = {
-        ...currCalendarPeriodEndDate,
-      };
+      //console.log("start date in current calendar period");
 
-      if (!currPeriodStart) {
-        console.log("something got fucked up");
-        return;
-      }
-      if (!currPeriodEnd) {
-        console.log("something got fucked up");
-        return;
-      }
-
-      const daysWithEvents: {
-        dayID: number;
-        events: CalendarEvent[];
-        calendarInfo?: { calendarID: number; calendarDate: CalendarDate };
-      }[] = [];
       console.log(currPeriodStart, currPeriodEnd, currCalendarDate);
       console.log(calendarDaysInPeriod[idx]);
       if (period == "WEEKLY") {
-        while (compareDates(currCalendarDate, endDate) <= 0) {
-          if (daysWithEvents.length == 0 && calendarDaysInPeriod[idx].id) {
-            console.log("adding day in period");
-            daysWithEvents.push({
-              dayID: calendarDaysInPeriod[idx].id,
-              events: [event.c],
-            });
-          } else {
-            daysWithEvents.push({
-              dayID: -1,
-              events: [event.c],
-              calendarInfo: {
-                calendarID: calendarID,
-                calendarDate: currCalendarDate,
-              },
-            });
-          }
-
-          const { newPeriodStart, newSelectedDay, newPeriodEnd } = getNextWeek(
-            currPeriodStart,
-            currCalendarDate,
-            currPeriodEnd,
-          );
-
-          console.log(newPeriodStart, newPeriodEnd, newSelectedDay);
-          currPeriodStart = { ...newPeriodStart };
-          currCalendarDate = { ...newSelectedDay };
-          currPeriodEnd = { ...newPeriodEnd };
-        }
+        const daysWithEvents = populateDaysWithEventsWeekly(
+          currPeriodStart,
+          currCalendarDate,
+          currPeriodEnd,
+          endDate,
+          event.c,
+          idx,
+        );
 
         console.log(daysWithEvents);
 
-        if (daysWithEvents.length > 0) {
-          const createdEvents = await createEvents(
-            daysWithEvents,
-            rh?.token ?? "",
-          );
-          console.log(createdEvents);
+        await addDaysWithEventsToDB(daysWithEvents);
 
-          const drivingSituations = await Promise.all(
-            createdEvents.map((ce) =>
-              createDrivingSituation(ce, rh?.token ?? ""),
-            ),
-          );
-
-          console.log(daysWithEvents.length, drivingSituations.length);
-
+        /* Update UI if needed 
           if (newEventInPeriod) {
             setCalendarDaysInPeriod((prevPeriod) => {
               const updatedPeriod = [...prevPeriod];
@@ -476,12 +547,17 @@ export function CalendarUI({
                 { ...createdEvents[0] },
               ],
             });
-          }
-        }
+          }*/
+      } else {
+        console.log(`need to implement month stuff inside of period`);
       }
-      setRightSideDisplayType("DAY");
-      //getNewPeriod(currCalendarPeriodStartDate, currCalendarPeriodEndDate);
     }
+    const np = await getNewPeriod(
+      currCalendarPeriodStartDate,
+      currCalendarPeriodEndDate,
+    );
+    setCalendarDaysInPeriod(np);
+    setRightSideDisplayType("DAY");
   }
 
   /**

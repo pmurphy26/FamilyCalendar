@@ -79,7 +79,7 @@ export async function createEvents(
     const reqBody = JSON.stringify({
       days,
     });
-    console.log(reqBody);
+    //console.log(reqBody);
     const res = await fetch("http://localhost:3001/api/events/add", {
       method: "POST",
       headers: {
@@ -186,7 +186,7 @@ export async function createDrivingSituation(
       },
     ],
   });
-  console.log(reqBody);
+  //console.log(reqBody);
   const res = await fetch("http://localhost:3001/api/transportation/add", {
     method: "POST",
     headers: {
