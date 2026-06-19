@@ -1,4 +1,3 @@
-
 .calendar-container {
   min-height: 80vh;
   width: 100%;
@@ -21,8 +20,10 @@
 
 .left-split {
   flex: 0 0 70%;
+  min-width: 0;
   padding: 16px;
-  overflow: hidden; /* or auto if you want this to scroll too */
+  overflow-x: auto;
+  overflow-y: hidden;
   box-sizing: border-box;
 }
 

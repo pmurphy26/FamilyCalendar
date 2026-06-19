@@ -202,12 +202,6 @@ export function CalendarGrid({
             </div>
           ))}
         {days.map((d, i) => {
-          /*console.log(
-              `${d.date.month}/${d.date.day}/${d.date.year}`,
-              i,
-              periodStart,
-              periodEnd,
-            );*/
           return (
             <div
               key={i}

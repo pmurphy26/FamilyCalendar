@@ -19,13 +19,12 @@ import {
   getWeekPeriod,
   padNumberWithZeros,
 } from "../helpers/constants";
+import { CalendarDayEventUI, CalendarEventUI } from "./CalendarEvent";
 import {
-  CalendarDayEventUI,
-  CalendarEventUI,
   CreateCalendarEventUI,
   CreateRecurringCalendarEventUI,
   EditCalendarEventUI,
-} from "./CalendarEvent";
+} from "./NonViewCalendarEvent";
 import { mockEvent } from "../helpers/mockData";
 import {
   createDrivingSituation,
@@ -129,7 +128,7 @@ export function CalendarUI({
   }
 
   /**
-   * Array with a CalendarDay object for every day in the period start to end (inclusive)
+   * RESPONSIBLE FOR GETTING PERIOD SHOWN ON CALENDAR
    *
    * @param newStart start date
    * @param newEnd end date
@@ -139,8 +138,6 @@ export function CalendarUI({
     newStart: CalendarDate,
     newEnd: CalendarDate,
   ): Promise<CalendarDay[]> {
-    console.log(newStart);
-    console.log(newEnd);
     function addBlankDays(
       currentDay: number,
       targetDay: number,
@@ -170,7 +167,7 @@ export function CalendarUI({
       newEnd,
       rh?.token ?? "",
     );
-    console.log(daysWithEvents);
+    //console.log(daysWithEvents);
 
     let allDaysInPeriod: CalendarDay[] = [];
     let currentDay: number = newStart.day;
@@ -193,10 +190,8 @@ export function CalendarUI({
         targetDay,
       );
       currentDay = newCurrentDay;
-      console.log("blank days:", newDaysInPeriod);
-      console.log(allDaysInPeriod);
       allDaysInPeriod = [...allDaysInPeriod, ...newDaysInPeriod];
-      console.log(allDaysInPeriod);
+      //console.log(allDaysInPeriod);
 
       if (targetDay != dayWithEvent.date.day) {
         currentDay = 1;
@@ -205,27 +200,23 @@ export function CalendarUI({
           dayWithEvent.date.day,
         );
         currentDay = newCurrDay;
-        console.log("blank days:", newDaysInPeriod);
-        console.log("all days in period before", [...allDaysInPeriod]);
         allDaysInPeriod = [...allDaysInPeriod, ...newBlankDays];
-        console.log("all days in period after adding:", [...allDaysInPeriod]);
+        //console.log("all days in period after adding:", [...allDaysInPeriod]);
         //console.log("New current day:", currentDay);
       }
 
-      console.log("adding day with event");
-      console.log(dayWithEvent);
+      //console.log("adding day with event");
+      //console.log(dayWithEvent);
 
-      console.log("before adding day with event", [...allDaysInPeriod]);
       allDaysInPeriod = [...allDaysInPeriod, dayWithEvent];
       currentDay += 1;
-      console.log("after adding day with event", [...allDaysInPeriod]);
     }
 
-    console.log([...allDaysInPeriod]);
+    //console.log([...allDaysInPeriod]);
     /* Fill in until end of period */
     const dim = daysInMonthDict(newStart.month, newStart.year);
     const nextTargetDay = newEnd.day + 1 >= currentDay ? newEnd.day : dim; //TODO: edit nextTargetDay for when current day is still in previous month and new end is in next month
-    console.log("Adding until:", currentDay, newEnd.day, nextTargetDay);
+    //console.log("Adding until:", currentDay, newEnd.day, nextTargetDay);
 
     while (currentDay <= nextTargetDay) {
       const day = currentDay > dim ? currentDay - dim : currentDay;
@@ -262,7 +253,7 @@ export function CalendarUI({
       //console.log("New current day:", currentDay);
     }
 
-    console.log(allDaysInPeriod);
+    //console.log(allDaysInPeriod);
     return allDaysInPeriod;
   }
 
