@@ -85,7 +85,7 @@ export function CalendarGrid({
   }, [periodStart, periodEnd]);
 
   return (
-    <div className="calendar-grid">
+    <div className={`${label == "MONTH" ? "month-" : ""}calendar-grid`}>
       {/* Header showing / selecting current period */}
       <div className="calendar-header">
         {/* < Button */}
