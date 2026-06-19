@@ -163,14 +163,13 @@ export function CalendarGrid({
                   periodEnd,
                 );
 
-                /*console.log(
+                console.log(
                   `Next week is ${nextWeekInfo.newPeriodStart.month}/${
                     nextWeekInfo.newPeriodStart.day
                   } to ${nextWeekInfo.newPeriodEnd.month}/${
                     nextWeekInfo.newPeriodEnd.day
                   }. Selected day is ${newSelectedDay.month}/${newSelectedDay.day}.`,
                 );
-                */
 
                 onChange(newSelectedDay);
               }

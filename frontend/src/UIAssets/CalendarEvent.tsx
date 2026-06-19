@@ -225,7 +225,7 @@ export function CreateCalendarEventUI({
   const [newEvent, setNewEvent] = useState<CalendarEvent>({
     id: -1,
     location: "",
-    startTime: { hour: 0, minute: 0, isAM: false },
+    startTime: { hour: 12, minute: 0, isAM: false },
     endTime: { hour: 12, minute: 0, isAM: false },
     title: "",
     notes: "",
@@ -442,7 +442,7 @@ export function CreateRecurringCalendarEventUI({
   const [newEvent, setNewEvent] = useState<CalendarEvent>({
     id: -1,
     location: "",
-    startTime: { hour: 0, minute: 0, isAM: false },
+    startTime: { hour: 12, minute: 0, isAM: false },
     endTime: { hour: 12, minute: 0, isAM: false },
     title: "",
     notes: "",
