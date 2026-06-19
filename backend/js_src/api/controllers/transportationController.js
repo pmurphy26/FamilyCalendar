@@ -75,13 +75,13 @@ const updateTransportation = async (req, res) => {
         //console.log(`Passing details as ${JSON.stringify(arrival)}`);
         //console.log(`Passing details as ${JSON.stringify(departure)}`);
         if (arrival) {
-            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, arrival);
+            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, arrival, true);
             if (!successfulAlter) {
                 throw new Error(`Failed to successfully alter arrival in database`);
             }
         }
         if (departure) {
-            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, departure);
+            const successfulAlter = await (0, transportation_1.alterTransportation)(eventID, departure, false);
             if (!successfulAlter) {
                 throw new Error(`Failed to successfully alter depature in database`);
             }

@@ -1,4 +1,4 @@
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BooleanForm, NumberForm } from "../helpers/forms";
 import type {
   CalendarEvent,
@@ -80,8 +80,16 @@ export function VehiclePassengersUI({ v }: { v: TransportationForEvent }) {
         className="driver-row"
         style={{ height: `${v.vehicle.numPeopleCanFit <= 5 ? 50 : 100 / 3}%` }}
       >
-        <div className="driver-cell">{v.driver?.name ?? "Driver"}</div>
-        <div className="driver-cell">
+        <div
+          className="driver-cell"
+          style={{ background: v.driver?.name ? "#fff" : "#eee" }}
+        >
+          {v.driver?.name ?? "Driver"}
+        </div>
+        <div
+          className="driver-cell"
+          style={{ background: v.passengers[0]?.name ? "#fff" : "#eee" }}
+        >
           {v.passengers.length > 0 ? v.passengers[0].name : "S"}
         </div>
       </div>
@@ -90,26 +98,76 @@ export function VehiclePassengersUI({ v }: { v: TransportationForEvent }) {
         className="driver-row"
         style={{ height: `${v.vehicle.numPeopleCanFit <= 5 ? 50 : 100 / 3}%` }}
       >
-        <div className="driver-cell">
+        <div
+          className="driver-cell"
+          style={{
+            background:
+              v.passengers.length > 1 && v.passengers[1]?.name
+                ? "#fff"
+                : "#eee",
+          }}
+        >
           {v.passengers.length > 1 ? v.passengers[1].name : "C1"}
         </div>
-        <div className="driver-cell">
+        <div
+          className="driver-cell"
+          style={{
+            background:
+              v.passengers.length > 2 && v.passengers[2]?.name
+                ? "#fff"
+                : "#eee",
+          }}
+        >
           {v.passengers.length > 2 ? v.passengers[2].name : "C2"}
         </div>
         {(v.vehicle.numPeopleCanFit == 5 || v.vehicle.numPeopleCanFit >= 8) && (
-          <div className="driver-cell">C3</div>
+          <div
+            className="driver-cell"
+            style={{
+              background:
+                v.passengers.length == 5 && v.passengers[5]?.name
+                  ? "#fff"
+                  : "#eee",
+            }}
+          >
+            C3
+          </div>
         )}
       </div>
 
       {v.vehicle.numPeopleCanFit > 5 && (
         <div className="driver-row" style={{ height: `${100 / 3}%` }}>
-          <div className="driver-cell">
+          <div
+            className="driver-cell"
+            style={{
+              background:
+                v.passengers.length > 3 && v.passengers[3]?.name
+                  ? "#fff"
+                  : "#eee",
+            }}
+          >
             {v.passengers.length > 3 ? v.passengers[3].name : "B1"}
           </div>
-          <div className="driver-cell">
+          <div
+            className="driver-cell"
+            style={{
+              background:
+                v.passengers.length > 4 && v.passengers[3]?.name
+                  ? "#fff"
+                  : "#eee",
+            }}
+          >
             {v.passengers.length > 4 ? v.passengers[4].name : "B2"}
           </div>
-          <div className="driver-cell">
+          <div
+            className="driver-cell"
+            style={{
+              background:
+                v.passengers.length > 5 && v.passengers[3]?.name
+                  ? "#fff"
+                  : "#eee",
+            }}
+          >
             {v.passengers.length > 5 ? v.passengers[5].name : "B3"}
           </div>
         </div>

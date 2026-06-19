@@ -168,8 +168,8 @@ export function CalendarEventUI({
       {hasBoth && (
         <div className="toggle-wrapper">
           <ToggleUI
-            val1={"departure"}
-            val2={"arrival"}
+            val1={"Dropoff"}
+            val2={"Pickup"}
             curr={curr}
             onToggle={() => {
               setCurr(curr == "RIGHT" ? "LEFT" : "RIGHT");

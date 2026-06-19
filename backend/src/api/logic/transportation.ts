@@ -180,18 +180,19 @@ export async function addTransportationsToDB(
           leaveAtHour: tfe.leaveAt?.hour ?? null,
           leaveAtMinute: tfe.leaveAt?.minute ?? null,
           leaveAtIsAM: tfe.leaveAt?.isAM ?? null,
+          passengers: tfe.passengers,
         })),
     );
 
     // Insert each row
     await Promise.all(
-      rows.map((row) =>
-        controller.query(
+      rows.map(async (row) => {
+        const res = await controller.query(
           `
           INSERT INTO transportation_for_event
             (event_id, is_arrival, vehicle_id, driver_id, leave_at_hour, leave_at_minute, leave_at_is_am)
           VALUES
-            ($1, $2, $3, $4, $5, $6, $7);
+            ($1, $2, $3, $4, $5, $6, $7) RETURNING id;
         `,
           [
             row.eventID,
@@ -202,8 +203,29 @@ export async function addTransportationsToDB(
             row.leaveAtMinute,
             row.leaveAtIsAM,
           ],
-        ),
-      ),
+        );
+
+        if (res.rowCount != 0) {
+          const transportationForEventID = res.rows[0].id;
+          //console.log(transportationForEventID);
+          //console.log(transportationForEvent.passengers);
+
+          const passengerRes = await Promise.all(
+            row.passengers.map((p) => {
+              return controller.query(
+                `
+          INSERT INTO transportation_passengers 
+            (transportation_id, passenger_id)
+          VALUES ($1, $2)
+          ON CONFLICT (transportation_id, passenger_id) DO NOTHING;`,
+                [transportationForEventID, p.id],
+              );
+            }),
+          );
+        }
+
+        return res;
+      }),
     );
   } catch (err) {
     console.error("DB ERROR inserting transportations:", err);
@@ -217,45 +239,81 @@ export async function alterTransportation(
   isArrival: boolean = true,
 ): Promise<boolean> {
   try {
-    await controller.query(
-      `UPDATE transportation_for_event 
-            SET vehicle_id=$1
-            ${
-              transportationForEvent.leaveAt
-                ? ", leave_at_hour=$2, leave_at_minute=$3, leave_at_is_am=$4"
-                : ", leave_at_hour=NULL, leave_at_minute=NULL, leave_at_is_am=NULL"
-            }
-            ${
-              transportationForEvent.driver
-                ? transportationForEvent.leaveAt
-                  ? ", driver_id=$5"
-                  : ", driver_id=$2"
-                : ", driver_id=NULL"
-            }
-            WHERE event_id=${
-              transportationForEvent.leaveAt
-                ? transportationForEvent.driver
-                  ? "$6"
-                  : "$5"
-                : transportationForEvent.driver
-                  ? "$3"
-                  : "$2"
-            };`,
-      [
-        transportationForEvent.vehicle.id,
-        ...(transportationForEvent.leaveAt
-          ? [
-              transportationForEvent.leaveAt.hour,
-              transportationForEvent.leaveAt.minute,
-              transportationForEvent.leaveAt.isAM,
-            ]
-          : []),
-        ...(transportationForEvent.driver
-          ? [transportationForEvent.driver.id]
-          : []),
-        eventID,
-      ],
-    );
+    const fields: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    // Always update vehicle_id
+    fields.push(`vehicle_id = $${idx}`);
+    params.push(transportationForEvent.vehicle.id);
+    idx++;
+
+    // leaveAt fields
+    if (transportationForEvent.leaveAt) {
+      fields.push(`leave_at_hour = $${idx}`);
+      params.push(transportationForEvent.leaveAt.hour);
+      idx++;
+
+      fields.push(`leave_at_minute = $${idx}`);
+      params.push(transportationForEvent.leaveAt.minute);
+      idx++;
+
+      fields.push(`leave_at_is_am = $${idx}`);
+      params.push(transportationForEvent.leaveAt.isAM);
+      idx++;
+    } else {
+      fields.push(`leave_at_hour = NULL`);
+      fields.push(`leave_at_minute = NULL`);
+      fields.push(`leave_at_is_am = NULL`);
+    }
+
+    // driver_id
+    if (transportationForEvent.driver) {
+      fields.push(`driver_id = $${idx}`);
+      params.push(transportationForEvent.driver.id);
+      idx++;
+    } else {
+      fields.push(`driver_id = NULL`);
+    }
+
+    // WHERE event_id = ?
+    fields.push(`event_id = $${idx}`);
+    params.push(eventID);
+    idx++;
+
+    // AND is_arrival = ?
+    fields.push(`is_arrival = $${idx}`);
+    params.push(isArrival);
+    //idx++;
+
+    const queryStr = `
+      UPDATE transportation_for_event
+      SET ${fields.slice(0, -2).join(", ")}
+      WHERE event_id = $${idx - 1} AND is_arrival = $${idx}
+      RETURNING id;
+    `;
+
+    const res = await controller.query(queryStr, params);
+
+    if (res.rowCount != 0) {
+      const transportationForEventID = res.rows[0].id;
+      //console.log(transportationForEventID);
+      //console.log(transportationForEvent.passengers);
+
+      //TODO: remove passengers not in passenger list from DB
+      const passengerRes = await Promise.all(
+        transportationForEvent.passengers.map((p) => {
+          return controller.query(
+            `
+          INSERT INTO transportation_passengers 
+          (transportation_id, passenger_id)
+          VALUES ($1, $2)
+          ON CONFLICT (transportation_id, passenger_id) DO NOTHING;`,
+            [transportationForEventID, p.id],
+          );
+        }),
+      );
+    }
 
     return true;
   } catch (err) {
