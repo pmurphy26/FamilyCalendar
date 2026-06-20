@@ -29,7 +29,7 @@ export default function CalendarWithAuth() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/${mode}`, {
+      const res = await fetch(`${API_BASE}/api/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
