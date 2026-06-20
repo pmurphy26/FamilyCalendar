@@ -1,4 +1,5 @@
 import type { Family, FamilyIndividual } from "@shared/types";
+import { API_BASE } from "../AppAuth";
 
 /**
  * API call to create a new family
@@ -7,7 +8,7 @@ export async function createNewFamilyAPICall(
   authToken: string,
 ): Promise<Family | null> {
   try {
-    const res = await fetch("http://localhost:3001/api/family", {
+    const res = await fetch(`${API_BASE}/api/family`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,17 +40,14 @@ export async function createMemberWithFamilyID(
   authToken: string,
 ): Promise<FamilyIndividual | null> {
   try {
-    const res = await fetch(
-      `http://localhost:3001/api/familyIndividual/${familyID}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(newIndividual),
+    const res = await fetch(`${API_BASE}/api/familyIndividual/${familyID}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
       },
-    );
+      body: JSON.stringify(newIndividual),
+    });
 
     if (!res.ok) {
       throw new Error(`Failed to get the days in the period: ${res.status}`);
@@ -72,7 +70,7 @@ export async function createMemberWithFamilyCode(
   authToken: string,
 ): Promise<FamilyIndividual | null> {
   try {
-    const res = await fetch(`http://localhost:3001/api/familyIndividual/`, {
+    const res = await fetch(`${API_BASE}/api/familyIndividual/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -103,7 +101,7 @@ export async function linkUserToIndividual(
 ): Promise<boolean> {
   try {
     const res = await fetch(
-      `http://localhost:3001/api/user/family/${userID}/${familyIndividualID}`,
+      `${API_BASE}/api/user/family/${userID}/${familyIndividualID}`,
       {
         method: "PUT",
         headers: {

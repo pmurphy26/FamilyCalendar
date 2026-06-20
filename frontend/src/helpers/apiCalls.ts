@@ -8,6 +8,7 @@ import type {
   Vehicle,
 } from "@shared/types";
 import { compareDates } from "./constants";
+import { API_BASE } from "../AppAuth";
 
 /**
  * Api call to add a new a calendar event
@@ -27,7 +28,7 @@ export async function createEvent(
   //console.log("adding event to day with id:", calendarDayID);
 
   try {
-    const res = await fetch("http://localhost:3001/api/events/add", {
+    const res = await fetch(`${API_BASE}/api/events/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +81,7 @@ export async function createEvents(
       days,
     });
     //console.log(reqBody);
-    const res = await fetch("http://localhost:3001/api/events/add", {
+    const res = await fetch(`${API_BASE}/api/events/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -118,7 +119,7 @@ export async function editEvent(
   authToken: string,
   calendarInfo?: { newCalendarDayID: number; newDate: CalendarDate },
 ) {
-  const res = await fetch("http://localhost:3001/api/event/edit", {
+  const res = await fetch(`${API_BASE}/api/event/edit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -148,7 +149,7 @@ export async function editDrivingSituation(
   editedEvent: CalendarEvent,
   authToken: string,
 ) {
-  const res = await fetch("http://localhost:3001/api/transportation/edit", {
+  const res = await fetch(`${API_BASE}/api/transportation/edit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -187,7 +188,7 @@ export async function createDrivingSituation(
     ],
   });
   //console.log(reqBody);
-  const res = await fetch("http://localhost:3001/api/transportation/add", {
+  const res = await fetch(`${API_BASE}/api/transportation/add`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -217,7 +218,7 @@ export async function getCalendarDaysInPeriod(
   newEnd: CalendarDate,
   authToken: string,
 ) {
-  const res = await fetch(`http://localhost:3001/api/days/${calendarID}`, {
+  const res = await fetch(`${API_BASE}/api/days/${calendarID}`, {
     headers: { Authorization: `Bearer ${authToken}` },
   });
 
@@ -254,7 +255,7 @@ export async function getFamilyForIndividualWithID(
   authToken: string,
 ): Promise<Family | null> {
   try {
-    const res = await fetch(`http://localhost:3001/api/family/${id}`, {
+    const res = await fetch(`${API_BASE}/api/family/${id}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -274,7 +275,7 @@ export async function updateIndividual(
   newIndividual: FamilyIndividual,
   authToken: string,
 ): Promise<FamilyIndividual> {
-  const res = await fetch(`http://localhost:3001/api/familyIndividual/update`, {
+  const res = await fetch(`${API_BASE}/api/familyIndividual/update`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -296,24 +297,21 @@ export async function deleteFamilyMemberWithID(
   id: number,
   authToken: string,
 ): Promise<boolean> {
-  const res = await fetch(
-    `http://localhost:3001/api/familyIndividual/delete/${id}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        //   "Content-Type": "application/json",
-      },
-      // body: JSON.stringify({
-      //   transportation: [
-      //     {
-      //       eventID: editedEvent.id,
-      //       details: { ...editedEvent.drivingSituation },
-      //     },
-      //   ],
-      // }),
+  const res = await fetch(`${API_BASE}/api/familyIndividual/delete/${id}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+      //   "Content-Type": "application/json",
     },
-  );
+    // body: JSON.stringify({
+    //   transportation: [
+    //     {
+    //       eventID: editedEvent.id,
+    //       details: { ...editedEvent.drivingSituation },
+    //     },
+    //   ],
+    // }),
+  });
 
   if (!res.ok) {
     throw new Error(`Failed to get the days in the period: ${res.status}`);
@@ -332,7 +330,7 @@ export async function createFamilyVehicle(
   newVehicle: Vehicle,
   authToken: string,
 ): Promise<Vehicle> {
-  const res = await fetch(`http://localhost:3001/api/vehicle/${familyID}`, {
+  const res = await fetch(`${API_BASE}/api/vehicle/${familyID}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -354,7 +352,7 @@ export async function updateVehicle(
   newVehicle: Vehicle,
   authToken: string,
 ): Promise<boolean> {
-  const res = await fetch(`http://localhost:3001/api/vehicle/update`, {
+  const res = await fetch(`${API_BASE}/api/vehicle/update`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -376,7 +374,7 @@ export async function deleteFamilyVehicleWithID(
   id: number,
   authToken: string,
 ): Promise<boolean> {
-  const res = await fetch(`http://localhost:3001/api/vehicle/delete/${id}`, {
+  const res = await fetch(`${API_BASE}/api/vehicle/delete/${id}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${authToken}`,
@@ -401,7 +399,7 @@ export async function getCalendarForFamilyWithID(
 ): Promise<Calendar | null> {
   try {
     //console.log(id);
-    const res = await fetch(`http://localhost:3001/api/calendar/family/${id}`, {
+    const res = await fetch(`${API_BASE}/api/calendar/family/${id}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 

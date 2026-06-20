@@ -10,7 +10,8 @@ import { CalendarApp } from "./App";
 import "./AppAuth.css";
 import NewUserPage from "./UIAssets/NewUserUI";
 
-const API_BASE = "http://localhost:3001/api";
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ?? `http://localhost:3001/`;
 
 export default function CalendarWithAuth() {
   const [auth, setAuth] = useState<AuthState>(() => loadAuthState());
