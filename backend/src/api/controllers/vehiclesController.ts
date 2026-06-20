@@ -16,27 +16,34 @@ export const createFamilyVehicle = async (req: Request, res: Response) => {
       return;
     }
 
-    const individual = req.body;
-
-    const required_fields = ["name", "numPeopleCanFit"];
-
-    for (const r_field of required_fields) {
-      if (!(r_field in individual)) {
-        throw new Error(
-          `Vehicle doesn't contain all fields. ${individual} is missing ${r_field}`,
-        );
-      }
+    if (id < 0) {
+      return res
+        .status(400)
+        .json({ error: `family id must be greater than 0` });
     }
 
-    const result = await createVehicleForFamily(id, individual as Vehicle);
+    const { name, numPeopleCanFit } = req.body;
+
+    if (!name || !numPeopleCanFit) {
+      throw new Error("must include name and numPeopleCanFit in request body");
+    }
+
+    const result = await createVehicleForFamily(id, {
+      name,
+      numPeopleCanFit,
+    } as Vehicle);
     res.json(result);
   } catch (err) {
     console.error("DB ERROR:", err);
-    res.status(500).json({ error: err });
+    if (err instanceof Error) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: err });
+    }
   }
 };
 
-export const deleteFamilyIndividual = async (req: Request, res: Response) => {
+export const deleteFamilyVehicle = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
 

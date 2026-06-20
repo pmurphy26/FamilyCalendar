@@ -37,7 +37,7 @@ const express_1 = __importStar(require("express"));
 const vehiclesController = __importStar(require("../controllers/vehiclesController"));
 const router = (0, express_1.Router)();
 const jsonParser = express_1.default.json();
-router.post("/vehicle/delete/:id", vehiclesController.deleteFamilyIndividual);
+router.post("/vehicle/delete/:id", vehiclesController.deleteFamilyVehicle);
 router.post("/vehicle/update", jsonParser, vehiclesController.updateFamilyVehicle);
 router.post("/vehicle/:id", jsonParser, vehiclesController.createFamilyVehicle);
 exports.default = router;

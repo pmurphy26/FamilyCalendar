@@ -26,12 +26,11 @@ async function getVehicleWithID(id) {
     };
 }
 async function createVehicleForFamily(familyID, newVehicle) {
-    //console.log(newIndividual);
     const result = await db_1.controller.query(`INSERT INTO vehicle 
-    (vehiclename, numpeoplecanfit, familyid)
+    (vehicle_name, num_people_can_fit, family_id)
     VALUES ($1, $2, $3) RETURNING id;`, [newVehicle.name, newVehicle.numPeopleCanFit, familyID]);
     if (result.rowCount == 0) {
-        throw new Error(`Error inserting new member to family with id: ${familyID}`);
+        throw new Error(`Error inserting new vehicle into family with id: ${familyID}`);
     }
     const row = result.rows[0];
     const required_fields = ["id"];
@@ -52,7 +51,7 @@ async function deleteVehicleWithID(id) {
 }
 async function updateVehicle(fv) {
     const result = await db_1.controller.query(`UPDATE vehicle 
-    SET vehiclename=$2, numpeoplecanfit=$3
+    SET vehicle_name=$2, num_people_can_fit=$3
     WHERE id=$1 RETURNING *;`, [fv.id, fv.name, fv.numPeopleCanFit]);
     const rc = result.rowCount ?? 0;
     return rc > 0;

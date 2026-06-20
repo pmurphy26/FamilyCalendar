@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateFamilyVehicle = exports.deleteFamilyIndividual = exports.createFamilyVehicle = void 0;
+exports.updateFamilyVehicle = exports.deleteFamilyVehicle = exports.createFamilyVehicle = void 0;
 const vehicle_1 = require("../logic/vehicle");
 const createFamilyVehicle = async (req, res) => {
     try {
@@ -9,23 +9,33 @@ const createFamilyVehicle = async (req, res) => {
             res.status(400).json({ error: "Invalid ID" });
             return;
         }
-        const individual = req.body;
-        const required_fields = ["name", "numPeopleCanFit"];
-        for (const r_field of required_fields) {
-            if (!(r_field in individual)) {
-                throw new Error(`Vehicle doesn't contain all fields. ${individual} is missing ${r_field}`);
-            }
+        if (id < 0) {
+            return res
+                .status(400)
+                .json({ error: `family id must be greater than 0` });
         }
-        const result = await (0, vehicle_1.createVehicleForFamily)(id, individual);
+        const { name, numPeopleCanFit } = req.body;
+        if (!name || !numPeopleCanFit) {
+            throw new Error("must include name and numPeopleCanFit in request body");
+        }
+        const result = await (0, vehicle_1.createVehicleForFamily)(id, {
+            name,
+            numPeopleCanFit,
+        });
         res.json(result);
     }
     catch (err) {
         console.error("DB ERROR:", err);
-        res.status(500).json({ error: err });
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message });
+        }
+        else {
+            res.status(500).json({ error: err });
+        }
     }
 };
 exports.createFamilyVehicle = createFamilyVehicle;
-const deleteFamilyIndividual = async (req, res) => {
+const deleteFamilyVehicle = async (req, res) => {
     try {
         const id = Number(req.params.id);
         if (isNaN(id)) {
@@ -40,7 +50,7 @@ const deleteFamilyIndividual = async (req, res) => {
         res.status(500).json({ error: err });
     }
 };
-exports.deleteFamilyIndividual = deleteFamilyIndividual;
+exports.deleteFamilyVehicle = deleteFamilyVehicle;
 const updateFamilyVehicle = async (req, res) => {
     try {
         const individual = req.body;

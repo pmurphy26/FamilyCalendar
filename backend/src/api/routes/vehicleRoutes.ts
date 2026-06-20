@@ -4,7 +4,7 @@ import * as vehiclesController from "../controllers/vehiclesController";
 const router = Router();
 const jsonParser = express.json();
 
-router.post("/vehicle/delete/:id", vehiclesController.deleteFamilyIndividual);
+router.post("/vehicle/delete/:id", vehiclesController.deleteFamilyVehicle);
 router.post(
   "/vehicle/update",
   jsonParser,

@@ -292,9 +292,10 @@ function CalendarWeekDayColumnEventUI({
         {calendarEvent.title}
       </div>
       <div className="calendar-weekday-column-event-text">
-        <p>{`
-        ${padNumberWithZeros(calendarEvent.startTime.hour, 2)}:${padNumberWithZeros(calendarEvent.startTime.minute, 2)}`}</p>{" "}
-        {/*${calendarEvent.time.isAM ? "AM" : "PM"}`}</p>*/}
+        <p>
+          {`
+        ${padNumberWithZeros(calendarEvent.startTime.hour, 2)}:${padNumberWithZeros(calendarEvent.startTime.minute, 2)}`}
+        </p>
       </div>
     </div>
   );
