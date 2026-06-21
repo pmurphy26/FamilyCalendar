@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateEvent = exports.addEvents = exports.getEventsForDay = exports.getEvent = void 0;
+exports.deleteEvent = exports.updateEvent = exports.addEvents = exports.getEventsForDay = exports.getEvent = void 0;
 const events_1 = require("../logic/events");
 const days_1 = require("../logic/days");
 const getEvent = async (req, res) => {
@@ -213,3 +213,24 @@ const updateEvent = async (req, res) => {
     }
 };
 exports.updateEvent = updateEvent;
+const deleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const eventID = Number(id);
+        if (!eventID) {
+            return res.status(400).json({ error: "Request id is required" });
+        }
+        if (eventID < 1) {
+            return res
+                .status(400)
+                .json({ error: `request id must be greater than 0` });
+        }
+        const successfulDelete = await (0, events_1.deleteEventFromDB)(eventID);
+        res.json({ successfulDelete });
+    }
+    catch (err) {
+        console.error("error:", err);
+        res.status(500).json({ error: err });
+    }
+};
+exports.deleteEvent = deleteEvent;

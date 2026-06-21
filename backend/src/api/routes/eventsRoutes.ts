@@ -9,5 +9,6 @@ router.get("/events/day/:id", eventsController.getEventsForDay);
 router.post("/events/add", jsonParser, eventsController.addEvents);
 //router.delete("/comments/:id", eventsController.deleteComment);
 router.post("/event/edit", jsonParser, eventsController.updateEvent);
+router.delete("/event/delete/:id", eventsController.deleteEvent);
 
 export default router;

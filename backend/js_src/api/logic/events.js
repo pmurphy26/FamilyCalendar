@@ -4,6 +4,7 @@ exports.getEventWithID = getEventWithID;
 exports.getEventsForDayWithID = getEventsForDayWithID;
 exports.addEventsToDB = addEventsToDB;
 exports.updateEventInDB = updateEventInDB;
+exports.deleteEventFromDB = deleteEventFromDB;
 const db_1 = require("../../database/db");
 const transportation_1 = require("./transportation");
 async function getEventWithID(id) {
@@ -280,4 +281,13 @@ async function updateEventInDB(event, calendarDayID) {
         console.error(err);
         return -1;
     }
+}
+async function deleteEventFromDB(eventID) {
+    const res = await db_1.controller.query(`DELETE FROM calendar_event WHERE id=$1`, [
+        eventID,
+    ]);
+    if (res.rowCount == 0) {
+        throw new Error(`Could not find event to delete with id ${eventID}`);
+    }
+    return true;
 }

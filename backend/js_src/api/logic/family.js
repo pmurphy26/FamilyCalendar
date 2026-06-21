@@ -38,7 +38,7 @@ async function getFamilyForIndividualWithID(id) {
     }
 }
 async function getAllFamilyVehiclesWithID(id) {
-    const result = await db_1.controller.query(`SELECT * FROM vehicle WHERE family_id = $1`, [id]);
+    const result = await db_1.controller.query(`SELECT * FROM vehicle WHERE family_id = $1 ORDER BY id`, [id]);
     if (result.rowCount == 0) {
         return [];
         //throw new Error(`No individuals found with family ID ${id}`);
@@ -61,7 +61,7 @@ async function getAllFamilyVehiclesWithID(id) {
 }
 async function getAllFamilyMembersWithID(id) {
     try {
-        const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE family_id = $1`, [id]);
+        const result = await db_1.controller.query(`SELECT * FROM family_individuals WHERE family_id = $1 ORDER BY id;`, [id]);
         if (result.rowCount == 0) {
             return [];
             //throw new Error(`No individuals found with family ID ${id}`);

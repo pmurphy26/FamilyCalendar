@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   addEventsToDB,
+  deleteEventFromDB,
   getEventsForDayWithID,
   getEventWithID,
   updateEventInDB,
@@ -235,6 +236,29 @@ export const updateEvent = async (req: Request, res: Response) => {
     }
   } catch (err) {
     console.error("DB ERROR:", err);
+    res.status(500).json({ error: err });
+  }
+};
+
+export const deleteEvent = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const eventID = Number(id);
+    if (!eventID) {
+      return res.status(400).json({ error: "Request id is required" });
+    }
+
+    if (eventID < 1) {
+      return res
+        .status(400)
+        .json({ error: `request id must be greater than 0` });
+    }
+
+    const successfulDelete = await deleteEventFromDB(eventID);
+
+    res.json({ successfulDelete });
+  } catch (err) {
+    console.error("error:", err);
     res.status(500).json({ error: err });
   }
 };

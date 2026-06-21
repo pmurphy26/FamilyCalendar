@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { padNumberWithZeros } from "../helpers/constants";
 import { BooleanForm, DateForm, NumberForm, TextForm } from "../helpers/forms";
 import type {
@@ -477,12 +477,14 @@ export function EditCalendarEventUI({
   originalEventDate,
   saveEditedEvent,
   openEvent,
+  deleteCalendarEvent,
 }: {
   originalEvent: CalendarEvent;
   family: Family;
   originalEventDate: CalendarDate;
   saveEditedEvent: (c: CalendarEvent, d: CalendarDate) => void;
   openEvent: () => void;
+  deleteCalendarEvent: (cID: number) => void;
 }) {
   const [newEvent, setNewEvent] = useState<CalendarEvent>({
     ...originalEvent,
@@ -495,6 +497,27 @@ export function EditCalendarEventUI({
       ? family.members.findIndex((m) => m.id == originalEvent.for?.id)
       : -1,
   );
+
+  const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node;
+
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        (!buttonRef.current || !buttonRef.current.contains(target))
+      ) {
+        setConfirmDelete(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <div className="calendar-event">
@@ -661,6 +684,31 @@ export function EditCalendarEventUI({
         >
           Save
         </div>
+
+        {/* Delete button */}
+        {!confirmDelete ? (
+          <button
+            ref={buttonRef}
+            className="delete-button"
+            onClick={() => {
+              console.log(`implement confirmation and then deletion`);
+              setConfirmDelete((d) => !d);
+              //deleteEvent(currentCalendarEvent.id);
+            }}
+          >
+            Delete Event
+          </button>
+        ) : (
+          <div
+            className="delete-button-confirm"
+            ref={dropdownRef}
+            onClick={async () => {
+              deleteCalendarEvent(originalEvent.id);
+            }}
+          >
+            Confirm Deletion
+          </div>
+        )}
       </div>
     </div>
   );

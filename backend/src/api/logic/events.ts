@@ -350,3 +350,15 @@ export async function updateEventInDB(
     return -1;
   }
 }
+
+export async function deleteEventFromDB(eventID: number): Promise<boolean> {
+  const res = await controller.query(`DELETE FROM calendar_event WHERE id=$1`, [
+    eventID,
+  ]);
+
+  if (res.rowCount == 0) {
+    throw new Error(`Could not find event to delete with id ${eventID}`);
+  }
+
+  return true;
+}

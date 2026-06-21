@@ -281,3 +281,38 @@ height: auto;
   opacity: 0.7;
   margin-bottom: 4px;
 }
+
+.delete-button {
+  margin-top: 12px;
+  padding: 12px;
+  background: white; /* red */
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.delete-button:hover {
+  background: #f5f2f2;
+}
+
+.delete-button-confirm {
+  margin-top: 12px;
+  padding: 12px;
+  background: #e74c3c; /* red */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+}
+
+.delete-button-confirm:hover {
+  background: #c0392b;
+}

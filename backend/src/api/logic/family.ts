@@ -49,7 +49,7 @@ export async function getAllFamilyVehiclesWithID(
   id: number,
 ): Promise<Vehicle[]> {
   const result = await controller.query(
-    `SELECT * FROM vehicle WHERE family_id = $1`,
+    `SELECT * FROM vehicle WHERE family_id = $1 ORDER BY id`,
     [id],
   );
 
@@ -86,7 +86,7 @@ export async function getAllFamilyMembersWithID(
 ): Promise<FamilyIndividual[]> {
   try {
     const result = await controller.query(
-      `SELECT * FROM family_individuals WHERE family_id = $1`,
+      `SELECT * FROM family_individuals WHERE family_id = $1 ORDER BY id;`,
       [id],
     );
 

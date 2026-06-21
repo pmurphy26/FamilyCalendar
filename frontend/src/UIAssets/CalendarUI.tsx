@@ -30,6 +30,7 @@ import {
   createDrivingSituation,
   createEvent,
   createEvents,
+  deleteEventFromDB,
   editDrivingSituation,
   editEvent,
   getCalendarDaysInPeriod,
@@ -90,7 +91,7 @@ export function CalendarUI({
       datesEqual(cd, newCurr),
     );
 
-    //console.log(dayInPeriod);
+    console.log(dayInPeriod);
 
     if (dayInPeriod.length > 0) {
       setCurrentDay(dayInPeriod[0]);
@@ -167,7 +168,7 @@ export function CalendarUI({
       newEnd,
       rh?.token ?? "",
     );
-    //console.log(daysWithEvents);
+    console.log(daysWithEvents);
 
     let allDaysInPeriod: CalendarDay[] = [];
     let currentDay: number = newStart.day;
@@ -373,9 +374,25 @@ export function CalendarUI({
       );
 
       setCurrentDay({ ...newDay, events: [...newDay.events, c] });
+      await reloadCurrentPeriod();
     }
 
     setRightSideDisplayType("EVENT");
+  }
+
+  /**
+   * Deletes an event with the given ID
+   *
+   * @param eventID
+   */
+  async function deleteEvent(eventID: number) {
+    await deleteEventFromDB(eventID, rh?.token ?? "");
+    await reloadCurrentPeriod();
+    setRightSideDisplayType("DAY");
+    setCurrentDay((prev) => ({
+      ...prev,
+      events: [...prev.events.filter((e) => e.id != eventID)],
+    }));
   }
 
   function populateDaysWithEventsWeekly(
@@ -678,10 +695,10 @@ export function CalendarUI({
       const currentDeparture = currentCalendarEvent.drivingSituation?.departure;
 
       const { arrival, departure } = e.drivingSituation;
-      console.log(currentArrival);
-      console.log(currentDeparture);
-      console.log(arrival);
-      console.log(departure);
+      //console.log(currentArrival);
+      //console.log(currentDeparture);
+      //console.log(arrival);
+      //console.log(departure);
 
       if (!!arrival) {
         if (!!currentArrival) {
@@ -801,6 +818,7 @@ export function CalendarUI({
         currCalendarPeriodStartDate,
         currCalendarPeriodEndDate,
       );
+      console.log(np);
       setCalendarDaysInPeriod(np);
     }
   }
@@ -947,6 +965,12 @@ export function CalendarUI({
                 saveEditedEvent={async (c: CalendarEvent, d: CalendarDate) =>
                   await saveEditedEvent(c, rh, d)
                 }
+                deleteCalendarEvent={async (calendarEventID: number) => {
+                  console.log(
+                    `need to implement deleting event with id: ${calendarEventID}`,
+                  );
+                  await deleteEvent(calendarEventID);
+                }}
               />
             )}
           </div>

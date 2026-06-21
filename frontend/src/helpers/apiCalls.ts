@@ -139,6 +139,29 @@ export async function editEvent(
   return data;
 }
 
+export async function deleteEventFromDB(
+  calendarEventID: number,
+  authToken: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/event/delete/${calendarEventID}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to delete event from db`);
+    }
+
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
 /**
  * Api call to edit a transportation for event
  *
