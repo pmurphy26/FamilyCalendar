@@ -179,7 +179,7 @@ export function CalendarEventUI({
       )}
       {!hasBoth && (hasDeparture || hasArrival) && (
         <div className="single-header">
-          {`${hasArrival ? "Arrival" : "Departure"}:`}
+          {`${hasArrival ? "Pickup" : "Dropoff"}:`}
         </div>
       )}
       {hasBoth && event.drivingSituation?.[activeKey] && (

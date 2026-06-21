@@ -249,14 +249,16 @@ async function updateEventInDB(event, calendarDayID) {
       event_start_hour = $3,
       event_start_minute = $4,
       event_start_is_am = $5,
-      event_location = $6,
-      created_by_id = $7,
-      event_notes = $8
-      ${event.for ? `, for_id = $9` : ""}
+      event_end_hour = $6,
+      event_end_minute = $7,
+      event_end_is_am = $8,
+      event_location = $9,
+      created_by_id = $10,
+      event_notes = $11
+      ${event.for ? `, for_id = $12` : ""}
       ${calendarDayID != null
-            ? `, calendar_day_id = ${event.for ? "$10" : "$9"}`
+            ? `, calendar_day_id = ${event.for ? "$13" : "$12"}`
             : ""}
-
     WHERE id = $1
     RETURNING *;`, [
             event.id,
@@ -264,6 +266,9 @@ async function updateEventInDB(event, calendarDayID) {
             event.startTime.hour,
             event.startTime.minute,
             event.startTime.isAM,
+            event.endTime.hour,
+            event.endTime.minute,
+            event.endTime.isAM,
             event.location,
             event.createdBy.id,
             ...(event.notes ? [event.notes] : [null]),
