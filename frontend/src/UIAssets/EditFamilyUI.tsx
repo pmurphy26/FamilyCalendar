@@ -197,7 +197,7 @@ export function EditFamilyMembersUI({
             style={{ width: "25%" }}
           >
             <div
-              className="edit-family-member-button"
+              className="edit-family-member-button-confirm"
               onClick={() => {
                 setCreatingNewMember(false);
               }}
@@ -335,24 +335,73 @@ function EditFamilyMember({
         />
       </div>
 
-      <div
-        className="edit-family-member-button-container"
-        style={{ width: "25%" }}
-      >
-        <div
-          className="edit-family-member-button"
-          onClick={() => {
-            onUpdate(currentMember);
-          }}
-        >{`Update`}</div>
+      <UpdateAndDeleteButtons
+        currentItem={currentMember}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+}
 
-        <div
-          className="edit-family-member-button"
-          onClick={() => {
-            onDelete(currentMember);
-          }}
-        >{`Delete`}</div>
-      </div>
+function UpdateAndDeleteButtons({
+  currentItem,
+  onUpdate,
+  onDelete,
+}: {
+  currentItem: any;
+  onUpdate: (ci: any) => void;
+  onDelete: (ci: any) => void;
+}) {
+  const [confirming, setConfirming] = useState<"UPDATE" | "DELETE" | "NONE">(
+    "NONE",
+  );
+
+  return confirming == "NONE" ? (
+    <div
+      className="edit-family-member-button-container"
+      style={{ width: "25%" }}
+    >
+      <div
+        className="edit-family-member-button"
+        onClick={() => {
+          //onUpdate(currentItem);
+          setConfirming("UPDATE");
+        }}
+      >{`Update`}</div>
+
+      <div
+        className="edit-family-member-button"
+        onClick={() => {
+          //onDelete(currentItem);
+          setConfirming("DELETE");
+        }}
+      >{`Delete`}</div>
+    </div>
+  ) : (
+    <div
+      className="edit-family-member-button-container"
+      style={{ width: "25%" }}
+    >
+      <div
+        className="edit-family-member-button-confirm"
+        onClick={() => {
+          if (confirming == "UPDATE") {
+            onUpdate(currentItem);
+          } else {
+            onDelete(currentItem);
+          }
+          setConfirming("NONE");
+        }}
+      >{`Comfirm ${confirming == "UPDATE" ? "Update" : "Deletion"}`}</div>
+
+      <div
+        className="edit-family-member-button"
+        onClick={() => {
+          //onDelete(currentItem);
+          setConfirming("NONE");
+        }}
+      >{`Cancel`}</div>
     </div>
   );
 }
@@ -435,7 +484,7 @@ function CreateFamilyMember({
         style={{ width: "25%" }}
       >
         <div
-          className="edit-family-member-button"
+          className="edit-family-member-button-confirm"
           onClick={() => {
             onCreate(currentMember);
           }}
@@ -561,24 +610,11 @@ function EditFamilyVehicle({
         />
       </div>
 
-      <div
-        className="edit-family-member-button-container"
-        style={{ width: "25%" }}
-      >
-        <div
-          className="edit-family-member-button"
-          onClick={() => {
-            onUpdate(currentVehicle);
-          }}
-        >{`Update`}</div>
-
-        <div
-          className="edit-family-member-button"
-          onClick={() => {
-            onDelete(currentVehicle);
-          }}
-        >{`Delete`}</div>
-      </div>
+      <UpdateAndDeleteButtons
+        currentItem={currentVehicle}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
     </div>
   );
 }

@@ -82,3 +82,14 @@
   background: transparent;
   cursor: pointer;
 }
+
+.select-role select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+}

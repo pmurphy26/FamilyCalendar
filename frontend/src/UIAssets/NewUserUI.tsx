@@ -1,6 +1,10 @@
 import { useState } from "react";
 import "./NewUser.css";
-import { type AuthState, type FamilyIndividual } from "../../../shared/types";
+import {
+  type AuthState,
+  type FamilyIndividual,
+  type FamilyIndividualRoles,
+} from "../../../shared/types";
 import {
   createMemberWithFamilyCode,
   createMemberWithFamilyID,
@@ -19,6 +23,7 @@ export default function NewUserPage({
 }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<FamilyIndividualRoles>("PARENT");
   const [colorStr, setColorStr] = useState("#000000"); //"#3498db");
   const [canDrive, setCanDrive] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(true);
@@ -48,6 +53,29 @@ export default function NewUserPage({
           onChange={(e) => setLastName(e.target.value)}
           placeholder="Enter last name"
         />
+
+        {/* User role */}
+        <label className="form-label">User Role</label>
+        <div className="select-role">
+          <select
+            value={role}
+            onChange={(e) => {
+              setRole(e.target.value as FamilyIndividualRoles);
+            }}
+            style={{ width: "100%" }}
+          >
+            {["MOM", "DAD", "GRANDPARENT", "CHILD", "OTHER", "PARENT"].map(
+              (r) => {
+                r;
+                return (
+                  <option key={`cr-${r}`} value={r}>
+                    {r}
+                  </option>
+                );
+              },
+            )}
+          </select>
+        </div>
 
         {/* Create New Family Checkbox */}
         <div className="checkbox-row">
@@ -134,7 +162,7 @@ export default function NewUserPage({
               const newIndividual = await createMemberWithFamilyID(
                 newFamily.id,
                 {
-                  role: "CHILD",
+                  role: role,
                   name: `${firstName} ${lastName}`,
                   canDrive: canDrive,
                   canEditCalendar: canEdit,
