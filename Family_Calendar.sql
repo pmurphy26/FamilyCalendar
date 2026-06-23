@@ -27,7 +27,8 @@ CREATE TYPE public.family_individual_role AS ENUM (
     'MOM',
     'DAD',
     'CHILD',
-    'OTHER'
+    'OTHER',
+    'PARENT'
 );
 
 

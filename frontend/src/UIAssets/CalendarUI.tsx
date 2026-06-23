@@ -23,8 +23,7 @@ import { CalendarDayEventUI, CalendarEventUI } from "./CalendarEvent";
 import {
   CreateCalendarEventUI,
   CreateRecurringCalendarEventUI,
-  EditCalendarEventUI,
-} from "./NonViewCalendarEvent";
+} from "./CreateCalendarEvent";
 import { mockEvent } from "../helpers/mockData";
 import {
   createDrivingSituation,
@@ -35,6 +34,7 @@ import {
   editEvent,
   getCalendarDaysInPeriod,
 } from "../helpers/apiCalls";
+import { EditCalendarEventUI } from "./EditCalendarEvent";
 
 /**
  * Main application UI

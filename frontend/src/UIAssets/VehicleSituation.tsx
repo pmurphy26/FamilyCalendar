@@ -305,6 +305,7 @@ export function SelectVehicleUI({
             ))}
           </select>
 
+          {/* DRIVER */}
           {newEvent.drivingSituation?.[activeKey] && (
             <div className="edit-selected-drive-situation">
               <select
@@ -324,6 +325,7 @@ export function SelectVehicleUI({
                     setNewEvent({
                       ...newEvent,
                       drivingSituation: {
+                        ...newEvent.drivingSituation,
                         [activeKey]: {
                           ...newEvent.drivingSituation?.[activeKey],
                           driver: family.members[Number(e.target.value)],
