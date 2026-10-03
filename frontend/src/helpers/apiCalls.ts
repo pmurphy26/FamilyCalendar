@@ -276,6 +276,7 @@ function filterDaysOnPeriod(
 export async function getFamilyForIndividualWithID(
   id: number,
   authToken: string,
+  logout: () => void,
 ): Promise<Family | null> {
   try {
     const res = await fetch(`${API_BASE}/api/family/${id}`, {
@@ -283,6 +284,7 @@ export async function getFamilyForIndividualWithID(
     });
 
     if (!res.ok) {
+      logout();
       throw new Error(`Failed to get the days in the period: ${res.status}`);
     }
 

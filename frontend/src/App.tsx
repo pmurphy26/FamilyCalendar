@@ -35,6 +35,7 @@ export function CalendarApp({
       const userFamily = await getFamilyForIndividualWithID(
         userID,
         rh?.token ?? "",
+        logout,
       );
 
       if (!!userFamily) {
