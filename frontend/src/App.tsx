@@ -51,6 +51,7 @@ export function CalendarApp({
         }
       } else {
         console.log("error getting family");
+        logout();
       }
     };
 
